@@ -15,24 +15,158 @@ nav{display:flex;align-items:center;justify-content:space-between;height:68px}.b
 section{padding:26px 0} .section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:14px}.section-head h2{margin:0;font-size:26px}.muted{color:var(--muted);font-size:14px}
 .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px}.card h3{margin:0 0 8px}.kicker{color:#aaa;font-size:12px;text-transform:uppercase;letter-spacing:1px}.big{font-size:30px;font-weight:900}.row{display:flex;justify-content:space-between;gap:10px}.pill{display:inline-block;padding:5px 9px;border:1px solid #3a3a3a;border-radius:999px;font-size:12px;color:#ddd}.notice{border-left:4px solid #fff;background:var(--panel);padding:17px;border-radius:12px}
 .fixture{display:grid;grid-template-columns:100px 1fr auto;align-items:center;gap:18px;padding:18px 0;border-bottom:1px solid var(--line)}.fixture:last-child{border:0}.date{font-weight:800}.teams{font-size:18px;font-weight:750}.meta{color:#aaa;font-size:13px;margin-top:5px}.score{font-size:20px;font-weight:900}
-.calendar{background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden}.calendar .head,.calendar .item{display:grid;grid-template-columns:110px 1fr 120px;gap:12px;padding:14px 16px}.calendar .head{background:#1d1d1d;color:#aaa;font-size:12px;text-transform:uppercase}.calendar .item{border-top:1px solid var(--line)}
+.calendar{background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden}.calendar .head,.calendar .item{display:grid;grid-template-columns:110px 1fr 100px 120px;gap:12px;padding:14px 16px}.calendar .head{background:#1d1d1d;color:#aaa;font-size:12px;text-transform:uppercase}.calendar .item{border-top:1px solid var(--line)}
 .players{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.player{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;text-align:center}.num{font-size:34px;font-weight:900}.player .role{color:#aaa;font-size:13px}
 .footer{margin-top:40px;border-top:1px solid var(--line);padding:28px 0;color:#999;font-size:13px}.small{font-size:12px;color:#888}
-@media(max-width:760px){.navlinks{display:none}.hero-grid{grid-template-columns:1fr}.cards{grid-template-columns:1fr}.players{grid-template-columns:repeat(2,1fr)}.fixture{grid-template-columns:78px 1fr auto}.calendar .head,.calendar .item{grid-template-columns:78px 1fr;}.calendar .head span:last-child,.calendar .item span:last-child{display:none}.hero{padding-top:36px}}
+@media(max-width:760px){.navlinks{display:none}.hero-grid{grid-template-columns:1fr}.cards{grid-template-columns:1fr}.players{grid-template-columns:repeat(2,1fr)}.fixture{grid-template-columns:78px 1fr auto}.calendar .head,.calendar .item{grid-template-columns:78px 1fr 82px;}.calendar .head span:last-child,.calendar .item span:last-child{display:none}.hero{padding-top:36px}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script></head>
 <body>
 <header><div class="wrap"><nav><a class="brand" href="#top"><span class="badge">ADA</span><span>AD ARGONCILHE</span></a><div class="navlinks"><a href="#treinos">Treinos</a><a href="#jogos">Jogos</a><a href="#avisos">Avisos</a><a href="#equipa">Equipa</a></div></nav></div></header>
 <main id="top">
-<section class="hero"><div class="wrap hero-grid"><div><div class="eyebrow">Futebol de formação · 2026/27</div><h1>Equipa<br>Sub-10</h1><p>O ponto de encontro dos pais e atletas para consultar treinos, jogos, convocatórias e os avisos mais recentes.</p><a class="btn" href="#calendario">Ver calendário</a></div><div class="season"><div><div class="eyebrow">Próximo treino</div><strong id="nextDate">25 AGO</strong><div class="muted"><span id="nextTime">18:00</span> · <span id="nextPlace">Centro Social de Argoncilhe</span></div></div><div><span class="pill" id="nextTag">PRÉ-ÉPOCA</span></div></div></div></section>
-<section id="avisos"><div class="wrap"><div class="section-head"><h2>📢 Avisos</h2><span class="muted">Atualizar aqui primeiro</span></div><div class="notice"><strong id="noticeTitle">Início da pré-época</strong><br><span class="muted" id="noticeText">Os treinos começam no dia 25 de agosto às 18:00. Chegar 15 minutos antes.</span></div></div></section>
-<section id="treinos"><div class="wrap"><div class="section-head"><h2>📅 Próximos treinos</h2><span class="muted">Semana atual</span></div><div class="cards"><div class="card"><div class="kicker">Terça · 25 AGO</div><h3>Treino</h3><div class="big">18:00</div><div class="muted">Centro Social de Argoncilhe</div></div><div class="card"><div class="kicker">Quinta · 27 AGO</div><h3>Treino</h3><div class="big">18:00</div><div class="muted">Centro Social de Argoncilhe</div></div><div class="card"><div class="kicker">Terça · 01 SET</div><h3>Treino</h3><div class="big">18:00</div><div class="muted">Centro Social de Argoncilhe</div></div></div></div></section>
-<section id="jogos"><div class="wrap"><div class="section-head"><h2>🏆 Jogos</h2><span class="muted">Pré-época</span></div><div class="card"><div class="fixture"><div><div class="date">29 AGO</div><div class="small">Sáb</div></div><div><div class="teams">AD Argoncilhe <span class="muted">vs.</span> Adversário</div><div class="meta">10:00 · Local a confirmar</div></div><div class="pill">AMIGÁVEL</div></div><div class="fixture"><div><div class="date">15 SET</div><div class="small">Ter</div></div><div><div class="teams">AD Argoncilhe <span class="muted">vs.</span> Adversário</div><div class="meta">Hora a confirmar</div></div><div class="pill">AMIGÁVEL</div></div></div></div></section>
-<section id="calendario"><div class="wrap"><div class="section-head"><h2>🗓️ Calendário</h2><span class="muted">Setembro 2026</span></div><div class="calendar"><div class="head"><span>Data</span><span>Atividade</span><span>Local</span></div><div class="item"><span>01/09</span><span>Treino · 18:00</span><span>Centro Social</span></div><div class="item"><span>03/09</span><span>Treino · 18:00</span><span>Centro Social</span></div><div class="item"><span>08/09</span><span>Amigável · 18:00</span><span>A confirmar</span></div><div class="item"><span>10/09</span><span>Treino · 18:00</span><span>Centro Social</span></div></div></div></section>
+<section class="hero"><div class="wrap hero-grid"><div><div class="eyebrow">Benjamins B · 2026/27</div><h1><br>Benjamins Sub-10</h1><p>O ponto de encontro dos pais e atletas para consultar treinos, jogos, convocatórias e os avisos mais recentes.</p><a class="btn" href="#calendario">Ver calendário</a></div><div class="season"><div><div class="eyebrow">Próximo treino</div><strong id="nextDate">25 AGO</strong><div class="muted"><span id="nextTime">18:00</span> · <span id="nextPlace">Centro Social de Argoncilhe</span></div></div><div><span class="pill" id="nextTag">PRÉ-ÉPOCA</span></div></div></div></section>
+<section id="avisos"><div class="wrap"><div class="section-head"><h2>📢 Avisos</h2><span class="muted"></span></div><div class="notice"><strong id="noticeTitle">Início da pré-época</strong><br><span class="muted" id="noticeText">Os treinos começam no dia 25 de agosto às 18:00.</span></div></div></section>
+<section id="treinos"><div class="wrap"><div class="section-head"><h2>📅 Próximos treinos</h2><span class="muted">Semana atual</span></div><div class="cards"><div class="card"><div class="kicker">Terça · 25 AGO</div><h3>Treino</h3><div class="big">18:00</div><div class="muted">Centro Social de Argoncilhe</div></div><div class="card"><div class="kicker">Quinta · 27 AGO</div><h3>Treino</h3><div class="big">18:00</div><div class="muted">Centro Social de Argoncilhe</div></div><div class="card"><div class="kicker">Segunda · 31 AGO</div><h3>Treino</h3><div class="big">18:00</div><div class="muted">Centro Social de Argoncilhe</div></div></div></div></section>
+<section id="jogos"><div class="wrap"><div class="section-head"><h2>🏆 Jogos</h2><span class="muted">Pré-época e início da época</span></div><div class="card"><div class="fixture"><div><div class="date">05 SET</div><div class="small">Sáb</div></div><div><div class="teams">Torneio de Rua</div><div class="meta">Espinho</div></div><div class="pill">TORNEIO</div></div><div class="fixture"><div><div class="date">06 SET</div><div class="small">Dom</div></div><div><div class="teams">Torneio de Rua</div><div class="meta">Espinho</div></div><div class="pill">TORNEIO</div></div><div class="fixture"><div><div class="date">12 SET</div><div class="small">Sáb</div></div><div><div class="teams">Argoncilhe Cup</div><div class="meta">Argoncilhe</div></div><div class="pill">TORNEIO</div></div><div class="fixture"><div><div class="date">13 SET</div><div class="small">Dom</div></div><div><div class="teams">Argoncilhe Cup</div><div class="meta">Argoncilhe</div></div><div class="pill">TORNEIO</div></div><div class="fixture"><div><div class="date">19 SET</div><div class="small">Sáb</div></div><div><div class="teams">Canedo <span class="muted">—</span> AD Argoncilhe</div><div class="meta">Horário a confirmar · Fora (F)</div></div><div class="pill">AMIGÁVEL</div></div><div class="fixture"><div><div class="date">26 SET</div><div class="small">Sáb</div></div><div><div class="teams">AD Argoncilhe <span class="muted">—</span> Milheiroense</div><div class="meta">Horário a confirmar · Casa (C)</div></div><div class="pill">AMIGÁVEL</div></div><div class="fixture"><div><div class="date">03 OUT</div><div class="small">Sáb</div></div><div><div class="teams">1ª Jornada</div><div class="meta">Adversário e horário a confirmar</div></div><div class="pill">CAMPEONATO</div></div></div></div></section>
+<section id="calendario"><div class="wrap">
+<div class="section-head">
+  <div><h2>🗓️ Calendário</h2><span class="muted" id="calendarPeriod">A partir de 25 de agosto de 2026</span></div>
+  <div style="display:flex;gap:8px">
+    <button class="btn" style="margin:0;padding:9px 12px" id="prevMonth" type="button">←</button>
+    <button class="btn" style="margin:0;padding:9px 12px" id="nextMonth" type="button">→</button>
+  </div>
+</div>
+<div class="calendar">
+  <div class="head"><span>Data</span><span>Atividade</span><span>Horário</span><span>Local</span></div>
+  <div id="calendarRows"></div>
+</div>
+</div></section>
 <section id="equipa"><div class="wrap"><div class="section-head"><h2>👥 Equipa</h2><span class="muted">Exemplo de apresentação</span></div><div class="players"><div class="player"><div class="num">01</div><strong>Guarda-redes</strong><div class="role">Nome do atleta</div></div><div class="player"><div class="num">07</div><strong>Jogador</strong><div class="role">Nome do atleta</div></div><div class="player"><div class="num">10</div><strong>Jogador</strong><div class="role">Nome do atleta</div></div><div class="player"><div class="num">—</div><strong>Treinador</strong><div class="role">Nome do treinador</div></div></div></div></section>
 <section><div class="wrap"><div class="card"><div class="section-head"><h2>📍 Campo</h2><span class="muted">AD Argoncilhe</span></div><div>Centro Social de Argoncilhe</div><div class="muted">Rua do Centro Social, 4505-095 Argoncilhe</div></div></div></section>
 </main>
-<footer class="footer"><div class="wrap"><strong>AD Argoncilhe · Equipa Sub-10 2026/27</strong><br><span class="small">Página informativa para pais e atletas. Não publicar contactos pessoais nem dados sensíveis de menores.</span></div></footer>
+<footer class="footer"><div class="wrap"><strong>AD Argoncilhe · Equipa Sub-10 2026/27</strong><br><span class="small">Página informativa para pais e atletas.</span></div></footer>
 <script>
-(async()=>{try{const c=supabase.createClient(window.SUPABASE_URL,window.SUPABASE_KEY);const {data}=await c.from('team_content').select('content').eq('id','main').maybeSingle();if(!data?.content)return;const x=data.content;document.getElementById('nextDate').textContent=x.nextTraining?.date||'';document.getElementById('nextTime').textContent=x.nextTraining?.time||'';document.getElementById('nextPlace').textContent=x.nextTraining?.place||'';document.getElementById('nextTag').textContent=x.nextTraining?.tag||'';document.getElementById('noticeTitle').textContent=x.notice?.title||'';document.getElementById('noticeText').textContent=x.notice?.text||'';const t=document.querySelector('#treinos .cards');if(x.trainings?.length){t.innerHTML=x.trainings.map(v=>`<div class="card"><div class="kicker">${v.day||''} · ${v.date||''}</div><h3>${v.title||'Treino'}</h3><div class="big">${v.time||''}</div><div class="muted">${v.place||''}</div></div>`).join('')}const g=document.querySelector('#jogos .card');if(x.games?.length){g.innerHTML=x.games.map(v=>`<div class="fixture"><div><div class="date">${v.date||''}</div><div class="small">${v.day||''}</div></div><div><div class="teams">${v.home||''} <span class="muted">vs.</span> ${v.away||''}</div><div class="meta">${v.time||''} · ${v.place||''}</div></div><div class="pill">${v.type||''}</div></div>`).join('')}const cal=document.querySelector('#calendario .calendar');if(x.calendar?.length){cal.innerHTML='<div class="head"><span>Data</span><span>Atividade</span><span>Local</span></div>'+x.calendar.map(v=>`<div class="item"><span>${v.date||''}</span><span>${v.activity||''}</span><span>${v.place||''}</span></div>`).join('')}}catch(e){console.warn(e)}})();
-</script></body></html>
+(async()=>{
+  const games = [
+    {date:'2026-09-05', activity:'Torneio de Rua', time:'A confirmar', place:'Espinho'},
+    {date:'2026-09-06', activity:'Torneio de Rua', time:'A confirmar', place:'Espinho'},
+    {date:'2026-09-12', activity:'Torneio Argoncilhe Cup', time:'A confirmar', place:'Argoncilhe'},
+    {date:'2026-09-13', activity:'Torneio Argoncilhe Cup', time:'A confirmar', place:'Argoncilhe'},
+    {date:'2026-09-19', activity:'Jogo · Canedo', time:'A confirmar', place:'Fora (F)'},
+    {date:'2026-09-26', activity:'Jogo · Milheiroense', time:'A confirmar', place:'Casa (C)'},
+    {date:'2026-10-03', activity:'1.ª Jornada', time:'A confirmar', place:'A confirmar'}
+  ];
+
+  const weekdayNames = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  let view = new Date(2026,7,1); // Agosto 2026
+
+  function localDateKey(d){
+    return d.toISOString().slice(0,10);
+  }
+
+  function getCalendarItems(year, month){
+    const items = [];
+    const last = new Date(year, month + 1, 0).getDate();
+
+    for(let day=1; day<=last; day++){
+      const d = new Date(year, month, day);
+      const dow = d.getDay();
+
+      // Treinos fixos: segunda, terça e quinta, 18:00–19:30.
+      if([1,2,4].includes(dow) && d >= new Date(2026,7,25)){
+        items.push({
+          date: localDateKey(d),
+          activity: 'Treino',
+          time: '18:00–19:30',
+          place: 'Centro Social'
+        });
+      }
+    }
+
+    // Jogos/torneios substituem a linha de treino apenas se coincidirem com o mesmo dia.
+    games.filter(g => {
+      const gd = new Date(g.date + 'T12:00:00');
+      return gd.getFullYear() === year && gd.getMonth() === month;
+    }).forEach(g => items.push(g));
+
+    return items.sort((a,b)=>a.date.localeCompare(b.date));
+  }
+
+  function renderCalendar(){
+    const items = getCalendarItems(view.getFullYear(), view.getMonth());
+    document.getElementById('calendarPeriod').textContent =
+      `${monthNames[view.getMonth()]} ${view.getFullYear()}`;
+
+    document.getElementById('calendarRows').innerHTML = items.map(v => {
+      const d = new Date(v.date + 'T12:00:00');
+      const dateLabel = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+      return `<div class="item">
+        <span><strong>${dateLabel}</strong><br><span class="small">${weekdayNames[d.getDay()]}</span></span>
+        <span>${v.activity}</span>
+        <span>${v.time}</span>
+        <span>${v.place}</span>
+      </div>`;
+    }).join('') || `<div class="item"><span>—</span><span>Sem atividades</span><span>—</span><span>—</span></div>`;
+  }
+
+  document.getElementById('prevMonth').addEventListener('click',()=>{
+    if(view.getFullYear() === 2026 && view.getMonth() === 7) return;
+    view = new Date(view.getFullYear(), view.getMonth()-1, 1);
+    renderCalendar();
+  });
+
+  document.getElementById('nextMonth').addEventListener('click',()=>{
+    if(view.getFullYear() === 2026 && view.getMonth() === 11) return;
+    view = new Date(view.getFullYear(), view.getMonth()+1, 1);
+    renderCalendar();
+  });
+
+  renderCalendar();
+
+  try{
+    const c=supabase.createClient(window.SUPABASE_URL,window.SUPABASE_KEY);
+    const {data}=await c.from('team_content').select('content').eq('id','main').maybeSingle();
+    if(!data?.content)return;
+    const x=data.content;
+
+    document.getElementById('nextDate').textContent=x.nextTraining?.date||'';
+    document.getElementById('nextTime').textContent=x.nextTraining?.time||'';
+    document.getElementById('nextPlace').textContent=x.nextTraining?.place||'';
+    document.getElementById('nextTag').textContent=x.nextTraining?.tag||'';
+    document.getElementById('noticeTitle').textContent=x.notice?.title||'';
+    document.getElementById('noticeText').textContent=x.notice?.text||'';
+
+    const t=document.querySelector('#treinos .cards');
+    if(x.trainings?.length){
+      t.innerHTML=x.trainings.map(v=>`<div class="card">
+        <div class="kicker">${v.day||''} · ${v.date||''}</div>
+        <h3>${v.title||'Treino'}</h3>
+        <div class="big">${v.time||''}</div>
+        <div class="muted">${v.place||''}</div>
+      </div>`).join('');
+    }
+
+    const g=document.querySelector('#jogos .card');
+    if(x.games?.length){
+      g.innerHTML=x.games.map(v=>`<div class="fixture">
+        <div><div class="date">${v.date||''}</div><div class="small">${v.day||''}</div></div>
+        <div><div class="teams">${v.home||''} <span class="muted">vs.</span> ${v.away||''}</div>
+        <div class="meta">${v.time||''} · ${v.place||''}</div></div>
+        <div class="pill">${v.type||''}</div>
+      </div>`).join('');
+    }
+
+    // Só usa calendário vindo do Supabase se existir; caso contrário mantém
+    // o calendário automático de treinos + jogos.
+    if(x.calendar?.length){
+      document.getElementById('calendarRows').innerHTML=x.calendar.map(v=>`<div class="item">
+        <span>${v.date||''}</span>
+        <span>${v.activity||''}</span>
+        <span>${v.time||'—'}</span>
+        <span>${v.place||''}</span>
+      </div>`).join('');
+    }
+  }catch(e){console.warn(e)}
+})();
+</script></script></body></html>
