@@ -30,7 +30,7 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
 <section id="jogos"><div class="wrap"><div class="section-head"><h2>🏆 Jogos</h2><span class="muted">Pré-época e início da época</span></div><div class="card"><div class="fixture"><div><div class="date">05 SET</div><div class="small">Sáb</div></div><div><div class="teams">Torneio de Rua</div><div class="meta">Espinho</div></div><div class="pill">TORNEIO</div></div><div class="fixture"><div><div class="date">06 SET</div><div class="small">Dom</div></div><div><div class="teams">Torneio de Rua</div><div class="meta">Espinho</div></div><div class="pill">TORNEIO</div></div><div class="fixture"><div><div class="date">12 SET</div><div class="small">Sáb</div></div><div><div class="teams">Argoncilhe Cup</div><div class="meta">Argoncilhe</div></div><div class="pill">TORNEIO</div></div><div class="fixture"><div><div class="date">13 SET</div><div class="small">Dom</div></div><div><div class="teams">Argoncilhe Cup</div><div class="meta">Argoncilhe</div></div><div class="pill">TORNEIO</div></div><div class="fixture"><div><div class="date">19 SET</div><div class="small">Sáb</div></div><div><div class="teams">Canedo <span class="muted">—</span> AD Argoncilhe</div><div class="meta">Horário a confirmar · Fora (F)</div></div><div class="pill">AMIGÁVEL</div></div><div class="fixture"><div><div class="date">26 SET</div><div class="small">Sáb</div></div><div><div class="teams">AD Argoncilhe <span class="muted">—</span> Milheiroense</div><div class="meta">Horário a confirmar · Casa (C)</div></div><div class="pill">AMIGÁVEL</div></div><div class="fixture"><div><div class="date">03 OUT</div><div class="small">Sáb</div></div><div><div class="teams">1ª Jornada</div><div class="meta">Adversário e horário a confirmar</div></div><div class="pill">CAMPEONATO</div></div></div></div></section>
 <section id="calendario"><div class="wrap">
 <div class="section-head">
-  <div><h2>🗓️ Calendário</h2><span class="muted" id="calendarPeriod">Agosto / Setembro 2026</span></div>
+  <div><h2>🗓️ Calendário</h2><span class="muted" id="calendarPeriod">A partir de 25 de agosto de 2026</span></div>
   <div style="display:flex;gap:8px">
     <button class="btn" style="margin:0;padding:9px 12px" id="prevMonth" type="button">←</button>
     <button class="btn" style="margin:0;padding:9px 12px" id="nextMonth" type="button">→</button>
@@ -74,7 +74,7 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
       const dow = d.getDay();
 
       // Treinos fixos: segunda, terça e quinta, 18:00–19:30.
-      if([1,2,4].includes(dow)){
+      if([1,2,4].includes(dow) && d >= new Date(2026,7,25)){
         items.push({
           date: localDateKey(d),
           activity: 'Treino',
