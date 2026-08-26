@@ -53,15 +53,91 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
   const seasonStart = new Date(2026,7,25); // 25/08/2026
   const seasonEnd = new Date(2027,5,30);   // 30/06/2027
 
-  const games = [
-    {date:'2026-09-05', activity:'Torneio Futebol de Rua ', time:'A confirmar', place:'Espinho'},
-    {date:'2026-09-06', activity:'Torneio Futebol de Rua ', time:'A confirmar', place:'Espinho'},
-    {date:'2026-09-12', activity:'Torneio Argoncilhe Cup', time:'A confirmar', place:'Argoncilhe'},
-    {date:'2026-09-13', activity:'Torneio Argoncilhe Cup', time:'A confirmar', place:'Argoncilhe'},
-    {date:'2026-09-19', activity:'Jogo · Canedo Futebol Clube', time:'A confirmar', place:'Canedo'},
-    {date:'2026-09-26', activity:'Jogo · Grupo Desportivo Milheiroense', time:'A confirmar', place:'Argoncilhe'},
-    {date:'2026-10-03', activity:'1.ª Jornada', time:'A confirmar', place:'A confirmar'}
+  // ==================================================
+  // ⚽ EDITAR JOGOS
+  // ==================================================
+  // Para adicionar um jogo, duplica um bloco e altera os dados.
+  // data       = DD/MM/AAAA
+  // adversario = adversário ou nome do torneio
+  // casaFora   = C (casa) ou F (fora)
+  // hora       = horário ou "A confirmar"
+  // local      = local do jogo
+  // tipo       = Amigável, Campeonato, Torneio, etc.
+  // ==================================================
+
+  const jogos = [
+    {
+      data: "05/09/2026",
+      adversario: "Torneio Futebol de Rua",
+      casaFora: "F",
+      hora: "A confirmar",
+      local: "Espinho",
+      tipo: "Torneio"
+    },
+    {
+      data: "06/09/2026",
+      adversario: "Torneio Futebol de Rua",
+      casaFora: "F",
+      hora: "A confirmar",
+      local: "Espinho",
+      tipo: "Torneio"
+    },
+    {
+      data: "12/09/2026",
+      adversario: "Torneio Argoncilhe Cup",
+      casaFora: "C",
+      hora: "A confirmar",
+      local: "Argoncilhe",
+      tipo: "Torneio"
+    },
+    {
+      data: "13/09/2026",
+      adversario: "Torneio Argoncilhe Cup",
+      casaFora: "C",
+      hora: "A confirmar",
+      local: "Argoncilhe",
+      tipo: "Torneio"
+    },
+    {
+      data: "19/09/2026",
+      adversario: "Canedo Futebol Clube",
+      casaFora: "F",
+      hora: "A confirmar",
+      local: "Canedo",
+      tipo: "Jogo"
+    },
+    {
+      data: "26/09/2026",
+      adversario: "Grupo Desportivo Milheiroense",
+      casaFora: "C",
+      hora: "A confirmar",
+      local: "Argoncilhe",
+      tipo: "Jogo"
+    },
+    {
+      data: "03/10/2026",
+      adversario: "A confirmar",
+      casaFora: "C",
+      hora: "A confirmar",
+      local: "A confirmar",
+      tipo: "Campeonato"
+    }
   ];
+
+  // ==================================================
+  // FIM DA ZONA DE EDIÇÃO DOS JOGOS
+  // ==================================================
+
+  // Não é necessário alterar esta parte.
+  const games = jogos.map(j => ({
+    date: j.data.split('/').reverse().join('-'),
+    activity: `${j.tipo} · ${j.adversario}`,
+    time: j.hora,
+    place: `${j.casaFora === 'C' ? 'Casa · ' : 'Fora · '}${j.local}`,
+    adversario: j.adversario,
+    casaFora: j.casaFora,
+    tipo: j.tipo
+  }));
 
   const weekdayNames = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
   const weekdayShort = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
