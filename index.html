@@ -19,8 +19,9 @@ nav{display:flex;align-items:center;justify-content:space-between;height:68px}.b
 section{padding:26px 0} .section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:14px}.section-head h2{margin:0;font-size:26px}.muted{color:var(--muted);font-size:14px}
 .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px}.card h3{margin:0 0 8px}.kicker{color:#aaa;font-size:12px;text-transform:uppercase;letter-spacing:1px}.big{font-size:30px;font-weight:900}.row{display:flex;justify-content:space-between;gap:10px}.pill{display:inline-block;padding:5px 9px;border:1px solid #3a3a3a;border-radius:999px;font-size:12px;color:#ddd}.notice{border-left:4px solid #fff;background:var(--panel);padding:17px;border-radius:12px}
 
-.calendar{background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden}.calendar .head,.calendar .item{display:grid;grid-template-columns:90px minmax(130px,1.2fr) 100px minmax(140px,1.15fr) minmax(180px,1.5fr);gap:12px;padding:14px 16px;align-items:start;box-sizing:border-box}.calendar .head{background:#1d1d1d;color:#aaa;font-size:12px;text-transform:uppercase;align-items:center}.calendar .item{border-top:1px solid var(--line);min-height:70px}.calendar .item > span{min-width:0;line-height:1.45;overflow-wrap:anywhere}.calendar .day-events{grid-column:2 / -1;display:flex;flex-direction:column;min-width:0}.calendar .event-row{display:grid;grid-template-columns:minmax(130px,1.2fr) 100px minmax(140px,1.15fr) minmax(180px,1.5fr);gap:12px;align-items:start;min-width:0}.calendar .event-row + .event-row{border-top:1px dashed var(--line);margin-top:10px;padding-top:10px}.calendar .event-row > span{min-width:0;line-height:1.45;overflow-wrap:anywhere}.calendar .date-cell{align-self:start;min-width:0}.calendar .date-cell strong{display:inline-block}.calendar .item hr{display:none}
-.calendar .item > span:nth-child(3){white-space:nowrap}.calendar .head span{min-width:0}
+.calendar{background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden}.calendar .head,.calendar .item{display:grid;grid-template-columns:90px 1.2fr 90px 110px 1.2fr;gap:12px;padding:14px 16px;align-items: stretch;}.calendar .head{background:#1d1d1d;color:#aaa;font-size:12px;text-transform:uppercase}.calendar .item{border-top:1px solid var(--line);
+  min-height: 70px;}
+.calendar .item hr{border:0;border-top:1px dashed var(--line);margin:8px 0}
 
 .calendar-filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
 .filter-btn{background:var(--panel);border:1px solid var(--line);color:var(--muted);padding:6px 14px;border-radius:999px;font-size:13px;cursor:pointer;transition:all .15s ease}
@@ -32,12 +33,7 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
 
 .players{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.player{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;text-align:center}.num{font-size:34px;font-weight:900}.player .role{color:#aaa;font-size:13px}
 .footer{margin-top:40px;border-top:1px solid var(--line);padding:28px 0;color:#999;font-size:13px}.small{font-size:12px;color:#888}
-@media(max-width:760px){.navlinks{display:none}.hero-grid{grid-template-columns:1fr}.cards{grid-template-columns:1fr}.players{grid-template-columns:repeat(2,1fr)}.fixture{grid-template-columns:78px 1fr auto}.calendar{overflow-x:auto}.calendar .head,.calendar .item{min-width:620px;grid-template-columns:78px 1.15fr 90px 120px 1.5fr;padding:12px 14px;gap:10px}.calendar .event-row{grid-template-columns:1.15fr 90px 120px 1.5fr;gap:10px}.calendar .event-row + .event-row{margin-top:8px;padding-top:8px}.hero{padding-top:36px}}
-
-/* ===== EDITAR TREINOS ===== */
-.training-editor{margin-top:18px}.training-editor .editor-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.training-editor label{display:block;font-size:12px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}.training-editor input,.training-editor textarea,.training-editor select{width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 11px;font:inherit}.training-editor textarea{min-height:82px;resize:vertical}.training-editor .editor-actions{display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap}.training-editor .editor-list{margin-top:18px;border:1px solid var(--line);border-radius:14px;overflow:hidden}.training-editor .editor-row{display:grid;grid-template-columns:95px minmax(150px,1fr) minmax(180px,1.4fr) minmax(170px,1.2fr) 78px;gap:12px;padding:11px 12px;border-top:1px solid var(--line);align-items:center}.training-editor .editor-row:first-child{border-top:0}.training-editor .editor-head{background:#1d1d1d;color:#aaa;font-size:11px;text-transform:uppercase}.training-editor .editor-row>div{min-width:0;overflow-wrap:anywhere}.training-editor .editor-buttons{display:flex;gap:5px;justify-content:flex-end}.training-editor .mini-btn{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:8px;padding:6px 8px;cursor:pointer}.training-editor .mini-btn:hover{border-color:#777}.training-editor .editor-note{margin-top:8px;font-size:12px;color:var(--muted)}
-@media(max-width:900px){.training-editor .editor-grid{grid-template-columns:1fr 1fr}.training-editor .editor-row{grid-template-columns:80px minmax(130px,1fr) minmax(150px,1.3fr) 70px}.training-editor .editor-row .objective{display:none}}
-@media(max-width:620px){.training-editor .editor-grid{grid-template-columns:1fr}.training-editor .editor-list{overflow-x:auto}.training-editor .editor-row{min-width:650px}}
+@media(max-width:760px){.navlinks{display:none}.hero-grid{grid-template-columns:1fr}.cards{grid-template-columns:1fr}.players{grid-template-columns:repeat(2,1fr)}.fixture{grid-template-columns:78px 1fr auto}.calendar .head,.calendar .item{grid-template-columns:78px 1fr 82px;}.calendar .head span:nth-child(4),.calendar .item span:nth-child(4),.calendar .head span:nth-child(5),.calendar .item span:nth-child(5){display:none}.hero{padding-top:36px}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script></head>
 <body>
@@ -45,28 +41,6 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
 <main id="top">
 <section class="hero"><div class="wrap hero-grid"><div><div class="eyebrow">Benjamins B · 2026/27</div><h1>Benjamins Sub-10</h1><p>O ponto de encontro dos pais e atletas para consultar treinos, jogos, convocatórias e os avisos mais recentes.</p><a class="btn" href="#calendario">Ver calendário</a></div><div class="season"><div><div class="eyebrow">Próximo treino</div><strong id="nextDate">25 AGO</strong><div class="muted"><span id="nextTime">18:00–19:30</span> · <span id="nextPlace">Campo do Centro Social de Argoncilhe</span></div></div><div><span class="pill" id="nextTag">PRÉ-ÉPOCA</span></div></div><div class="season"><div><div class="eyebrow">Próximo jogo</div><strong id="nextGameDate">05 SET</strong><div class="muted"><span id="nextGameTime">A confirmar</span> · <span id="nextGamePlace">Espinho</span></div><div class="muted" id="nextGameName" style="margin-top:6px">Torneio Futebol de Rua</div></div><div><span class="pill" id="nextGameTag">TORNEIO</span></div></div></div></section>
 <section id="avisos"><div class="wrap"><div class="section-head"><h2>📢 Avisos</h2><span class="muted"></span></div><div class="notice"><strong id="noticeTitle">Início da Época</strong><br><span class="muted" id="noticeText">Inquerito a decorrer no whatsapp.</span></div></div></section>
-
-
-<section id="editarTreinos"><div class="wrap">
-  <div class="section-head"><div><h2>⚙️ EDITAR TREINOS</h2><span class="muted">Tema, descrição e objetivo de cada treino</span></div></div>
-  <div class="card training-editor">
-    <div class="editor-grid">
-      <div><label for="editTrainingDate">Data</label><input id="editTrainingDate" type="date"></div>
-      <div><label for="editTrainingTheme">Tema</label><input id="editTrainingTheme" type="text" placeholder="Ex.: Passe e receção"></div>
-      <div><label for="editTrainingDescription">Descrição</label><textarea id="editTrainingDescription" placeholder="Conteúdo principal do treino"></textarea></div>
-      <div><label for="editTrainingObjective">Objetivo</label><textarea id="editTrainingObjective" placeholder="O que queremos desenvolver"></textarea></div>
-    </div>
-    <div class="editor-actions">
-      <button class="btn" id="saveTraining" type="button">Guardar treino</button>
-      <button class="btn" id="clearTraining" type="button" style="background:transparent">Limpar</button>
-      <span class="editor-note">As alterações ficam guardadas neste navegador e atualizam automaticamente o calendário.</span>
-    </div>
-    <div class="editor-list">
-      <div class="editor-row editor-head"><div>Data</div><div>Tema</div><div>Descrição</div><div class="objective">Objetivo</div><div></div></div>
-      <div id="trainingEditorRows"></div>
-    </div>
-  </div>
-</div></section>
 
 <section id="calendario"><div class="wrap">
 <div class="section-head">
@@ -108,108 +82,6 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
   // ==================================================
   const treinosCancelados = [
   ];
-
-  // ==================================================
-  // 📝 EDITAR DESCRIÇÃO DOS TREINOS
-  // Coloca aqui a descrição específica de cada treino.
-  // Exemplo: "08/09/2026": "Passe e receção"
-  // Se uma data não estiver nesta lista, aparece a descrição padrão.
-  // ==================================================
-  const descricoesTreinos = {
-    "25/08/2026": "Integração e técnica básica",
-    "27/08/2026": "Coordenação + condução",
-    "31/08/2026": "Coordenação + condução",
-    "01/09/2026": "Passe e receção",
-    "03/09/2026": "Condução + finalização",
-    "07/09/2026": "Coordenação + condução",
-    "08/09/2026": "Passe e receção"
-  };
-
-  // ==================================================
-  // 📝 EDITOR DE TREINOS
-  // Os dados guardados no navegador substituem as descrições acima.
-  // ==================================================
-  const trainingStorageKey = 'ad_argoncilhe_sub10_treinos_2026_27';
-  let treinosEditados = {};
-  try { treinosEditados = JSON.parse(localStorage.getItem(trainingStorageKey) || '{}') || {}; } catch(e) { treinosEditados = {}; }
-
-  function escapeHtml(value){
-    return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-  }
-
-  function saveTrainingData(){
-    localStorage.setItem(trainingStorageKey, JSON.stringify(treinosEditados));
-  }
-
-  function trainingDataForDate(date){
-    const key = formatDateForEdit(date);
-    const saved = treinosEditados[key] || {};
-    return {
-      theme: saved.theme || descricoesTreinos[key] || '',
-      description: saved.description || '',
-      objective: saved.objective || ''
-    };
-  }
-
-  function renderTrainingEditor(){
-    const rows = document.getElementById('trainingEditorRows');
-    if(!rows) return;
-    const entries = Object.keys(treinosEditados).sort((a,b)=>{
-      const pa=a.split('/').reverse().join('-'), pb=b.split('/').reverse().join('-');
-      return pa.localeCompare(pb);
-    });
-    rows.innerHTML = entries.length ? entries.map(date => {
-      const x=treinosEditados[date] || {};
-      return `<div class="editor-row">
-        <div><strong>${escapeHtml(date)}</strong></div>
-        <div>${escapeHtml(x.theme || '—')}</div>
-        <div>${escapeHtml(x.description || '—')}</div>
-        <div class="objective">${escapeHtml(x.objective || '—')}</div>
-        <div class="editor-buttons"><button class="mini-btn" type="button" data-edit-training="${escapeHtml(date)}">Editar</button><button class="mini-btn" type="button" data-delete-training="${escapeHtml(date)}">×</button></div>
-      </div>`;
-    }).join('') : '<div class="editor-row"><div>—</div><div>Sem alterações</div><div>Use o formulário acima para adicionar um treino.</div><div class="objective">—</div><div></div></div>';
-
-    rows.querySelectorAll('[data-edit-training]').forEach(btn=>btn.addEventListener('click',()=>loadTrainingForEdit(btn.dataset.editTraining)));
-    rows.querySelectorAll('[data-delete-training]').forEach(btn=>btn.addEventListener('click',()=>{
-      const date=btn.dataset.deleteTraining;
-      delete treinosEditados[date]; saveTrainingData(); renderTrainingEditor(); renderCalendar(); renderNextTraining();
-    }));
-  }
-
-  function loadTrainingForEdit(date){
-    const [dd,mm,yyyy]=date.split('/');
-    const x=treinosEditados[date] || {};
-    document.getElementById('editTrainingDate').value=`${yyyy}-${mm}-${dd}`;
-    document.getElementById('editTrainingTheme').value=x.theme || '';
-    document.getElementById('editTrainingDescription').value=x.description || '';
-    document.getElementById('editTrainingObjective').value=x.objective || '';
-    document.getElementById('editTrainingDate').focus();
-  }
-
-  function clearTrainingForm(){
-    document.getElementById('editTrainingDate').value='';
-    document.getElementById('editTrainingTheme').value='';
-    document.getElementById('editTrainingDescription').value='';
-    document.getElementById('editTrainingObjective').value='';
-  }
-
-  document.getElementById('saveTraining').addEventListener('click',()=>{
-    const raw=document.getElementById('editTrainingDate').value;
-    if(!raw){ alert('Escolhe a data do treino.'); return; }
-    const [yyyy,mm,dd]=raw.split('-');
-    const date=`${dd}/${mm}/${yyyy}`;
-    const theme=document.getElementById('editTrainingTheme').value.trim();
-    const description=document.getElementById('editTrainingDescription').value.trim();
-    const objective=document.getElementById('editTrainingObjective').value.trim();
-    if(new Date(Number(yyyy),Number(mm)-1,Number(dd)) < seasonStart || new Date(Number(yyyy),Number(mm)-1,Number(dd)) > seasonEnd){ alert('A data tem de estar dentro da época 2026/27.'); return; }
-    if(!isTrainingDay(new Date(Number(yyyy),Number(mm)-1,Number(dd)))){ alert('A data escolhida não corresponde a um dia de treino (segunda, terça ou quinta-feira).'); return; }
-    treinosEditados[date]={theme:theme || 'Treino',description,objective};
-    saveTrainingData(); renderTrainingEditor(); renderCalendar(); renderNextTraining(); clearTrainingForm();
-  });
-
-  document.getElementById('clearTraining').addEventListener('click',clearTrainingForm);
-
-  renderTrainingEditor();
 
   // ==================================================
   // ⚽ EDITAR JOGOS
@@ -424,10 +296,6 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
     return [1,2,4].includes(d.getDay()) && d >= seasonStart && d <= seasonEnd;
   }
 
-  function formatDateForEdit(d){
-    return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
-  }
-
   function getTrainingItems(year, month){
     const items = [];
     const last = new Date(year, month + 1, 0).getDate();
@@ -440,10 +308,10 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
 
         items.push({
           date: dateKey,
-          activity: isCanceled ? '<span class="canceled-text">Treino (CANCELADO)</span>' : escapeHtml(trainingDataForDate(d).theme || 'Treino'),
+          activity: isCanceled ? '<span class="canceled-text">Treino (CANCELADO)</span>' : 'Treino',
           time: isCanceled ? '—' : '18:00–19:30',
           place: 'Campo CS Argoncilhe',
-          description: isCanceled ? '<span class="canceled-text">Treino Cancelado</span>' : [trainingDataForDate(d).description, trainingDataForDate(d).objective ? '<strong>Objetivo:</strong> ' + escapeHtml(trainingDataForDate(d).objective) : ''].filter(Boolean).join('<br>') || '—',
+          description: isCanceled ? '<span class="canceled-text">Treino Cancelado</span>' : 'Trabalho técnico-tático',
           filterType: 'treino',
           isCanceled: isCanceled
         });
@@ -486,17 +354,17 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
       const d = parseDate(dateKey);
       const dateLabel = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
       
-      const eventsHtml = dayEvents.map(e => `
-        <div class="event-row">
-          <span>${e.activity}</span>
-          <span>${e.time}</span>
-          <span>${e.place}</span>
-          <span>${e.description}</span>
-        </div>`).join('');
+      const activitiesHtml = dayEvents.map(e => e.activity).join('<hr>');
+      const timesHtml = dayEvents.map(e => e.time).join('<hr>');
+      const placesHtml = dayEvents.map(e => e.place).join('<hr>');
+      const descHtml = dayEvents.map(e => e.description).join('<hr>');
 
       return `<div class="item">
-        <span class="date-cell"><strong>${dateLabel}</strong><br><span class="small">${weekdayNames[d.getDay()]}</span></span>
-        <div class="day-events">${eventsHtml}</div>
+        <span><strong>${dateLabel}</strong><br><span class="small">${weekdayNames[d.getDay()]}</span></span>
+        <span>${activitiesHtml}</span>
+        <span>${timesHtml}</span>
+        <span>${placesHtml}</span>
+        <span>${descHtml}</span>
       </div>`;
     }).join('') || `<div class="item"><span>—</span><span>Sem atividades</span><span>—</span><span>—</span><span>—</span></div>`;
   }
@@ -532,7 +400,8 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
     const today = new Date();
     const todayKey = localDateKey(today);
     const dKey = localDateKey(d);
-    document.getElementById('nextTag').textContent = trainingDataForDate(d).theme || (d.getTime() === seasonStart.getTime() ? 'PRÉ-ÉPOCA' : 'TREINO');
+    document.getElementById('nextTag').textContent =
+      dKey === todayKey ? 'Integração e técnica básica' : (d.getTime() === seasonStart.getTime() ? 'PRÉ-ÉPOCA' : 'Integração e técnica básica');
   }
 
   function nextGame(from = new Date()){
