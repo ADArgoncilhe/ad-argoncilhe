@@ -19,9 +19,8 @@ nav{display:flex;align-items:center;justify-content:space-between;height:68px}.b
 section{padding:26px 0} .section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:14px}.section-head h2{margin:0;font-size:26px}.muted{color:var(--muted);font-size:14px}
 .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px}.card h3{margin:0 0 8px}.kicker{color:#aaa;font-size:12px;text-transform:uppercase;letter-spacing:1px}.big{font-size:30px;font-weight:900}.row{display:flex;justify-content:space-between;gap:10px}.pill{display:inline-block;padding:5px 9px;border:1px solid #3a3a3a;border-radius:999px;font-size:12px;color:#ddd}.notice{border-left:4px solid #fff;background:var(--panel);padding:17px;border-radius:12px}
 
-.calendar{background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden}.calendar .head,.calendar .item{display:grid;grid-template-columns:90px 1.2fr 90px 110px 1.2fr;gap:12px;padding:14px 16px;align-items: stretch;}.calendar .head{background:#1d1d1d;color:#aaa;font-size:12px;text-transform:uppercase}.calendar .item{border-top:1px solid var(--line);
-  min-height: 70px;}
-.calendar .item hr{border:0;border-top:1px dashed var(--line);margin:8px 0}
+.calendar{background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden}.calendar .head,.calendar .item{display:grid;grid-template-columns:90px minmax(130px,1.2fr) 100px minmax(140px,1.15fr) minmax(180px,1.5fr);gap:12px;padding:14px 16px;align-items:start;box-sizing:border-box}.calendar .head{background:#1d1d1d;color:#aaa;font-size:12px;text-transform:uppercase;align-items:center}.calendar .item{border-top:1px solid var(--line);min-height:70px;}.calendar .item > span{min-width:0;line-height:1.45;overflow-wrap:anywhere}.calendar .item hr{border:0;border-top:1px dashed var(--line);margin:8px 0}
+.calendar .item > span:nth-child(3){white-space:nowrap}.calendar .head span{min-width:0}
 
 .calendar-filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
 .filter-btn{background:var(--panel);border:1px solid var(--line);color:var(--muted);padding:6px 14px;border-radius:999px;font-size:13px;cursor:pointer;transition:all .15s ease}
@@ -33,7 +32,7 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
 
 .players{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.player{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;text-align:center}.num{font-size:34px;font-weight:900}.player .role{color:#aaa;font-size:13px}
 .footer{margin-top:40px;border-top:1px solid var(--line);padding:28px 0;color:#999;font-size:13px}.small{font-size:12px;color:#888}
-@media(max-width:760px){.navlinks{display:none}.hero-grid{grid-template-columns:1fr}.cards{grid-template-columns:1fr}.players{grid-template-columns:repeat(2,1fr)}.fixture{grid-template-columns:78px 1fr auto}.calendar .head,.calendar .item{grid-template-columns:78px 1fr 82px;}.calendar .head span:nth-child(4),.calendar .item span:nth-child(4),.calendar .head span:nth-child(5),.calendar .item span:nth-child(5){display:none}.hero{padding-top:36px}}
+@media(max-width:760px){.navlinks{display:none}.hero-grid{grid-template-columns:1fr}.cards{grid-template-columns:1fr}.players{grid-template-columns:repeat(2,1fr)}.fixture{grid-template-columns:78px 1fr auto}.calendar{overflow-x:auto}.calendar .head,.calendar .item{min-width:620px;grid-template-columns:78px 1.15fr 90px 120px 1.5fr;padding:12px 14px;gap:10px}.hero{padding-top:36px}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script></head>
 <body>
@@ -82,6 +81,22 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
   // ==================================================
   const treinosCancelados = [
   ];
+
+  // ==================================================
+  // 📝 EDITAR DESCRIÇÃO DOS TREINOS
+  // Coloca aqui a descrição específica de cada treino.
+  // Exemplo: "08/09/2026": "Passe e receção"
+  // Se uma data não estiver nesta lista, aparece a descrição padrão.
+  // ==================================================
+  const descricoesTreinos = {
+    "25/08/2026": "Integração e técnica básica",
+    "27/08/2026": "Coordenação + condução",
+    "31/08/2026": "Coordenação + condução",
+    "01/09/2026": "Passe e receção",
+    "03/09/2026": "Condução + finalização",
+    "07/09/2026": "Coordenação + condução",
+    "08/09/2026": "Passe e receção"
+  };
 
   // ==================================================
   // ⚽ EDITAR JOGOS
@@ -296,6 +311,10 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
     return [1,2,4].includes(d.getDay()) && d >= seasonStart && d <= seasonEnd;
   }
 
+  function formatDateForEdit(d){
+    return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+  }
+
   function getTrainingItems(year, month){
     const items = [];
     const last = new Date(year, month + 1, 0).getDate();
@@ -311,7 +330,7 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
           activity: isCanceled ? '<span class="canceled-text">Treino (CANCELADO)</span>' : 'Treino',
           time: isCanceled ? '—' : '18:00–19:30',
           place: 'Campo CS Argoncilhe',
-          description: isCanceled ? '<span class="canceled-text">Treino Cancelado</span>' : 'Trabalho técnico-tático',
+          description: isCanceled ? '<span class="canceled-text">Treino Cancelado</span>' : (descricoesTreinos[formatDateForEdit(d)] || 'Trabalho técnico-tático'),
           filterType: 'treino',
           isCanceled: isCanceled
         });
@@ -400,8 +419,7 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
     const today = new Date();
     const todayKey = localDateKey(today);
     const dKey = localDateKey(d);
-    document.getElementById('nextTag').textContent =
-      dKey === todayKey ? 'Integração e técnica básica' : (d.getTime() === seasonStart.getTime() ? 'PRÉ-ÉPOCA' : 'Integração e técnica básica');
+    document.getElementById('nextTag').textContent = descricoesTreinos[formatDateForEdit(d)] || (d.getTime() === seasonStart.getTime() ? 'PRÉ-ÉPOCA' : 'Trabalho técnico-tático');
   }
 
   function nextGame(from = new Date()){
