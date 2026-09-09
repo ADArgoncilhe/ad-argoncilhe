@@ -46,28 +46,6 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
 <section class="hero"><div class="wrap hero-grid"><div><div class="eyebrow">Benjamins B · 2026/27</div><h1>Benjamins Sub-10</h1><p>O ponto de encontro dos pais e atletas para consultar treinos, jogos, convocatórias e os avisos mais recentes.</p><a class="btn" href="#calendario">Ver calendário</a></div><div class="season"><div><div class="eyebrow">Próximo treino</div><strong id="nextDate">25 AGO</strong><div class="muted"><span id="nextTime">18:00–19:30</span> · <span id="nextPlace">Campo do Centro Social de Argoncilhe</span></div></div><div><span class="pill" id="nextTag">PRÉ-ÉPOCA</span></div></div><div class="season"><div><div class="eyebrow">Próximo jogo</div><strong id="nextGameDate">05 SET</strong><div class="muted"><span id="nextGameTime">A confirmar</span> · <span id="nextGamePlace">Espinho</span></div><div class="muted" id="nextGameName" style="margin-top:6px">Torneio Futebol de Rua</div></div><div><span class="pill" id="nextGameTag">TORNEIO</span></div></div></div></section>
 <section id="avisos"><div class="wrap"><div class="section-head"><h2>📢 Avisos</h2><span class="muted"></span></div><div class="notice"><strong id="noticeTitle">Início da Época</strong><br><span class="muted" id="noticeText">Inquerito a decorrer no whatsapp.</span></div></div></section>
 
-
-<section id="editarTreinos"><div class="wrap">
-  <div class="section-head"><div><h2>⚙️ EDITAR TREINOS</h2><span class="muted">Tema, descrição e objetivo de cada treino</span></div></div>
-  <div class="card training-editor">
-    <div class="editor-grid">
-      <div><label for="editTrainingDate">Data</label><input id="editTrainingDate" type="date"></div>
-      <div><label for="editTrainingTheme">Tema</label><input id="editTrainingTheme" type="text" placeholder="Ex.: Passe e receção"></div>
-      <div><label for="editTrainingDescription">Descrição</label><textarea id="editTrainingDescription" placeholder="Conteúdo principal do treino"></textarea></div>
-      <div><label for="editTrainingObjective">Objetivo</label><textarea id="editTrainingObjective" placeholder="O que queremos desenvolver"></textarea></div>
-    </div>
-    <div class="editor-actions">
-      <button class="btn" id="saveTraining" type="button">Guardar treino</button>
-      <button class="btn" id="clearTraining" type="button" style="background:transparent">Limpar</button>
-      <span class="editor-note">As alterações ficam guardadas neste navegador e atualizam automaticamente o calendário.</span>
-    </div>
-    <div class="editor-list">
-      <div class="editor-row editor-head"><div>Data</div><div>Tema</div><div>Descrição</div><div class="objective">Objetivo</div><div></div></div>
-      <div id="trainingEditorRows"></div>
-    </div>
-  </div>
-</div></section>
-
 <section id="calendario"><div class="wrap">
 <div class="section-head">
   <div><h2>🗓️ Calendário</h2><span class="muted" id="calendarPeriod">25 de agosto de 2026 a 30 de junho de 2027</span></div>
