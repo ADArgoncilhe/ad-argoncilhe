@@ -64,16 +64,6 @@ section h2{font-size:21px;letter-spacing:-.02em}
  .calendar-table{font-size:12px}
  .calendar-table th,.calendar-table td{padding:8px 6px!important}
 }
-
-.private-section .private-hidden-content{display:none}
-.private-section .private-hidden-content.unlocked{display:block}
-.private-guard{background:linear-gradient(145deg,#171717,#101010);border:1px solid var(--line);border-radius:18px;padding:28px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:9px}
-.private-guard.hidden{display:none}
-.private-guard strong{font-size:18px}.private-guard span{color:var(--muted);font-size:14px}
-.private-guard .private-btn{margin-top:8px}
-.app-bottom-nav a.authenticated .ico::after{content:'✓';font-size:9px;margin-left:2px}
-
-.convocation-input{width:100%;box-sizing:border-box;margin-top:10px;background:#111;color:#fff;border:1px solid #333;border-radius:14px;padding:14px;font:inherit;line-height:1.5;resize:vertical;min-height:180px}.convocation-input:focus{outline:none;border-color:#fff}.convocation-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.private-btn.secondary{background:#242424;color:#fff;border-color:#444}.convocation-status{font-size:12px;color:#aaa;margin-top:8px;min-height:18px}.parents-area{padding:2px 0}.parents-area h3{font-size:20px}
 </style>
 
 <style id="app-dark-fix">
@@ -120,33 +110,9 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
 .canceled-text{color:#ff6b6b;font-weight:bold}
 
 .players{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.player{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;text-align:center}.num{font-size:34px;font-weight:900}.player .role{color:#aaa;font-size:13px}
-.today-games{display:grid;gap:12px;margin-bottom:16px}.game-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px}.game-card.today{border-color:#555}.game-card .game-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.game-card .game-opponent{font-size:20px;font-weight:800;margin:8px 0 12px}.game-meta{display:flex;flex-wrap:wrap;gap:7px}.game-empty{margin-bottom:16px}.footer{margin-top:40px;border-top:1px solid var(--line);padding:28px 0;color:#999;font-size:13px}.small{font-size:12px;color:#888}
+.footer{margin-top:40px;border-top:1px solid var(--line);padding:28px 0;color:#999;font-size:13px}.small{font-size:12px;color:#888}
 @media(max-width:760px){.navlinks{display:none}.hero-grid{grid-template-columns:1fr}.cards{grid-template-columns:1fr}.players{grid-template-columns:repeat(2,1fr)}.fixture{grid-template-columns:78px 1fr auto}.calendar{overflow-x:auto}.calendar .head,.calendar .item{min-width:620px;grid-template-columns:78px 1.15fr 90px 120px 1.5fr;padding:12px 14px;gap:10px}.calendar .event-row{grid-template-columns:1.15fr 90px 120px 1.5fr;gap:10px}.calendar .event-row + .event-row{margin-top:8px;padding-top:8px}.hero{padding-top:36px}}
 
-
-/* ===== ÁREA DOS PAIS / CONTEÚDO PROTEGIDO ===== */
-.private-locked{position:relative}
-.private-lock-overlay{background:linear-gradient(145deg,#151515,#0f0f0f);border:1px solid #2b2b2b;border-radius:18px;padding:28px;text-align:center}
-.private-lock-overlay .lock-icon{font-size:38px;margin-bottom:8px}
-.private-lock-overlay h3{margin:0 0 8px;font-size:22px}
-.private-lock-overlay p{margin:0 auto 16px;color:#aaa;max-width:520px}
-.private-btn{display:inline-flex;align-items:center;gap:8px;background:#fff;color:#080808;border:0;border-radius:12px;padding:12px 17px;font-weight:800;cursor:pointer}
-.private-content{display:none}
-.private-content.unlocked{display:block}
-.private-lock-overlay.hidden{display:none}
-.password-modal{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.78);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px}
-.password-modal.show{display:flex}
-.password-box{width:min(420px,100%);background:#151515;border:1px solid #363636;border-radius:22px;padding:24px;box-shadow:0 20px 70px rgba(0,0,0,.5)}
-.password-box h3{margin:0 0 7px;font-size:24px}
-.password-box p{color:#aaa;margin:0 0 18px;font-size:14px}
-.password-input{width:100%;background:#0b0b0b;color:#fff;border:1px solid #444;border-radius:12px;padding:13px 14px;font-size:16px;outline:none}
-.password-input:focus{border-color:#fff}
-.password-actions{display:flex;gap:10px;margin-top:14px}
-.password-actions button{flex:1;padding:12px;border-radius:12px;font-weight:800;cursor:pointer}
-.password-cancel{background:#222;color:#fff;border:1px solid #3a3a3a}
-.password-enter{background:#fff;color:#080808;border:1px solid #fff}
-.password-error{color:#ff7777;font-size:13px;margin-top:10px;min-height:18px}
-@media(max-width:760px){.password-box{padding:20px}.private-lock-overlay{padding:24px 18px}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script></head>
 <body>
@@ -155,9 +121,8 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
 <section class="hero"><div class="wrap hero-grid"><div><div class="eyebrow">Benjamins B · 2026/27</div><h1>Benjamins Sub-10</h1><p>O ponto de encontro dos pais e atletas para consultar treinos, jogos, convocatórias e os avisos mais recentes.</p><a class="btn" href="#calendario">Ver calendário</a></div><div class="season"><div><div class="eyebrow">Próximo treino</div><strong id="nextDate">25 AGO</strong><div class="muted"><span id="nextTime">18:00–19:30</span> · <span id="nextPlace">Campo do Centro Social de Argoncilhe</span></div></div><div><span class="pill" id="nextTag">PRÉ-ÉPOCA</span></div></div><div class="season"><div><div class="eyebrow">Próximo jogo</div><strong id="nextGameDate">05 SET</strong><div class="muted"><span id="nextGameTime">A confirmar</span> · <span id="nextGamePlace">Espinho</span></div><div class="muted" id="nextGameName" style="margin-top:6px">Torneio Futebol de Rua</div></div><div><span class="pill" id="nextGameTag">TORNEIO</span></div></div></div></section>
 <section id="avisos"><div class="wrap"><div class="section-head"><h2>📢 Avisos</h2><span class="muted"></span></div><div class="notice"><strong id="noticeTitle">Início da Época</strong><br><span class="muted" id="noticeText">Inquérito a decorrer no whatsapp.</span></div></div></section>
 
-<section id="jogos" class="private-section"><div class="wrap"><div class="section-head"><h2>⚽ Jogos</h2><span class="muted">Jogo(s) de hoje sempre visíveis</span></div><div id="todayGamesPublic"></div><div class="private-guard" id="gamesGuard"><div class="lock-icon">🔒</div><strong>Área dos Pais</strong><span>Introduza a password para consultar a convocatória.</span><button class="private-btn" type="button" data-open-password>🔑 Aceder</button></div><div class="notice private-hidden-content" id="gamesContent"><div class="parents-area"><div class="section-head" style="margin-bottom:10px"><div><h3 style="margin:0">📋 Convocatória</h3><span class="muted">Área reservada aos pais</span></div></div><textarea id="convocationText" class="convocation-input" placeholder="Coloque aqui a convocatória...
-Ex.: Convocados para o jogo de sábado..." rows="10"></textarea><div class="convocation-actions"><button class="private-btn" type="button" id="saveConvocation">💾 Guardar convocatória</button><button class="private-btn secondary" type="button" id="clearConvocation">🗑️ Limpar</button></div><div class="convocation-status" id="convocationStatus"></div></div></div></div></section>
-<section id="calendario" class="private-section"><div class="wrap">
+<section id="jogos"><div class="wrap"><div class="section-head"><h2>⚽ Jogos</h2><span class="muted">Próximos e resultados</span></div><div class="notice"><strong id="appGamesHint">A.D. Argoncilhe 0 - 0 C.F. Serzedo | A.D. Argoncilhe 0 - 0 C.D. Feirense Fem.</strong></div></div></section>
+<section id="calendario"><div class="wrap">
 <div class="section-head">
   <div><h2>🗓️ Calendário</h2><span class="muted" id="calendarPeriod">25 de agosto de 2026 a 30 de junho de 2027</span></div>
   <div style="display:flex;gap:8px">
@@ -174,13 +139,13 @@ Ex.: Convocados para o jogo de sábado..." rows="10"></textarea><div class="conv
   <button class="filter-btn" data-filter="campeonato">Campeonato</button>
 </div>
 
-<div class="private-guard" id="calendarGuard"><div class="lock-icon">🔒</div><strong>Calendário — Área dos Pais</strong><span>Introduza a password para consultar o calendário.</span><button class="private-btn" type="button" data-open-password>🔑 Aceder</button></div><div class="calendar private-hidden-content" id="calendarContent">
+<div class="calendar">
   <div class="head"><span>Data</span><span>Atividade</span><span>Horário</span><span>Local</span><span>Descrição</span></div>
   <div id="calendarRows"></div>
 </div>
 </div></section>
 <section id="equipa"><div class="wrap">
-  <div class="section-head"><h2>👥 Plantel</h2><span class="muted">Clique no jogador para abrir o perfil na web</span></div>
+  <div class="section-head"><h2>👥 Equipa</h2><span class="muted">Clique no jogador para abrir o perfil na web</span></div>
   <div class="players" id="playersGrid"></div>
 </div></section>
 <section><div class="wrap"><div class="card"><div class="section-head"><h2>📍 Campo</h2><span class="muted">AD Argoncilhe</span></div><div>Centro Social de Argoncilhe</div><div class="muted">Rua do Centro Social, 4505-095 Argoncilhe</div></div></div></section>
@@ -219,6 +184,24 @@ Ex.: Convocados para o jogo de sábado..." rows="10"></textarea><div class="conv
       local: "Mavipal",
       tipo: "Torneio",
       descricao: "ADAS CUP - Grupo A"
+    },
+    {
+      data: "12/09/2026",
+      adversario: "A.D.F.Anta vs A.D.Argoncilhe",
+      casaFora: "C",
+      hora: "15:00-15:25",
+      local: "Mavipal",
+      tipo: "Torneio",
+      descricao: "ADAS CUP - Grupo B"
+    },
+    {
+      data: "12/09/2026",
+      adversario: "Valadares G.F.C vs A.D.Argoncilhe",
+      casaFora: "C",
+      hora: "16:00-16:25",
+      local: "Mavipal",
+      tipo: "Torneio",
+      descricao: "ADAS CUP - Grupo B"
     },
     {
       data: "13/09/2026",
@@ -278,7 +261,7 @@ Ex.: Convocados para o jogo de sábado..." rows="10"></textarea><div class="conv
       data: "19/09/2026",
       adversario: "Canedo Futebol Clube",
       casaFora: "F",
-      hora: "A confirmar",
+      hora: "11:00",
       local: "Canedo",
       tipo: "Jogo",
       descricao: "Jogo amigável de preparação."
@@ -389,26 +372,6 @@ Ex.: Convocados para o jogo de sábado..." rows="10"></textarea><div class="conv
     tipo: j.tipo,
     filterType: j.tipo.toLowerCase()
   }));
-
-  function renderGamesArea(){
-    const todayKey = localDateKey(new Date());
-    const todayGames = games.filter(g => g.date === todayKey);
-    const publicBox = document.getElementById('todayGamesPublic');
-    if(!publicBox) return;
-    const today = new Date();
-    const todayLabel = `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`;
-    if(todayGames.length){
-      publicBox.innerHTML = `<div class="today-games"><div class="kicker">Jogos de hoje · ${todayLabel}</div>${todayGames.map(g => `
-        <div class="game-card today">
-          <div class="game-top"><span class="pill">${g.tipo || 'Jogo'}</span><span class="pill">${g.casaFora === 'C' ? 'CASA' : 'FORA'}</span></div>
-          <div class="game-opponent">${g.adversario}</div>
-          <div class="game-meta"><span class="pill">🕒 ${g.time || 'A confirmar'}</span><span class="pill">📍 ${g.place || 'A confirmar'}</span></div>
-          ${g.description ? `<div class="muted" style="margin-top:10px">${g.description}</div>` : ''}
-        </div>`).join('')}</div>`;
-    } else {
-      publicBox.innerHTML = `<div class="notice game-empty"><strong>Hoje não há jogos.</strong><div class="muted" style="margin-top:5px">Os restantes jogos estão protegidos na Área dos Pais.</div></div>`;
-    }
-  }
 
   const weekdayNames = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
   const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -560,9 +523,6 @@ Ex.: Convocados para o jogo de sábado..." rows="10"></textarea><div class="conv
     formatNextGame(nextGame(new Date()));
   }
 
-  renderGamesArea();
-  renderNextGame();
-
   function renderNextTraining(){
     const now = new Date();
     const candidate = new Date(now);
@@ -576,21 +536,21 @@ Ex.: Convocados para o jogo de sábado..." rows="10"></textarea><div class="conv
   // 👥 JOGADORES
   // ============================================================
   const players = [
-    { number: 7, name: 'Jogador', role: 'Jogador 1', url: 'https://www.zerozero.pt/jogador/francisco-oliveira/1289568' },
+    { number: 7, name: 'Jogador', role: 'Francisco Oliveira', url: 'https://www.zerozero.pt/jogador/francisco-oliveira/1289568' },
     { number: 9, name: 'Jogador', role: 'Vicente Lopes', url: 'https://www.zerozero.pt/jogador/vicente-lopes/1289570?epoca_id=156' },
     { number: 10, name: 'Jogador', role: 'Salvador Silva', url: 'https://www.zerozero.pt/jogador/salvador-silva/1335274' },
-    { number: 11, name: 'Jogador', role: 'Jogador 4', url: 'https://www.zerozero.pt/jogador/vitor-felix/1199139' },
-    { number: 12, name: 'Jogador', role: 'Jogador 5', url: 'https://www.zerozero.pt/jogador/tomas-silva/1289569' },
+    { number: 11, name: 'Jogador', role: 'Valentino Félix', url: 'https://www.zerozero.pt/jogador/vitor-felix/1199139' },
+    { number: 12, name: 'Jogador', role: 'Tomás Silva', url: 'https://www.zerozero.pt/jogador/tomas-silva/1289569' },
     { number: 17, name: 'Jogador', role: 'Jogador 6', url: '' },
     { number: 20, name: 'Jogador', role: 'Rodrigo Costa', url: 'https://www.zerozero.pt/jogador/rodrigo-costa/2780943' },
     { number: 21, name: 'Jogador', role: 'Afonso Carrilho', url: 'https://www.zerozero.pt/jogador/afonso-carrilho/2841920' },
     { number: 23, name: 'Jogador', role: 'Dinis Ferreira', url: 'https://www.zerozero.pt/jogador/dinis-ferreira/2056689' },
-    { number: 24, name: 'Jogador', role: 'Jogador 10', url: 'https://www.zerozero.pt/jogador/joana-tavares/2526658' },
+    { number: 24, name: 'Jogador', role: 'Joana Tavares', url: 'https://www.zerozero.pt/jogador/joana-tavares/2526658' },
     { number: 25, name: 'Guarda-Redes', role: 'Rodrigo Tavares', url: 'https://www.zerozero.pt/jogador/rodrigo-tavares/2841921' },
-    { number: 26, name: 'Jogador', role: 'Jogador 12', url: 'https://www.zerozero.pt/jogador/artur-oliveira/1289564' },
+    { number: 26, name: 'Jogador', role: 'Artur Oliveira', url: 'https://www.zerozero.pt/jogador/artur-oliveira/1289564' },
     { number: 30, name: 'Jogador', role: 'Jogador 13', url: '' },
     { number: 44, name: 'Guarda-Redes', role: 'Lucas Castro', url: 'https://www.zerozero.pt/jogador/lucas-castro/1529730' },
-    { number: 50, name: 'Jogador', role: 'Jogador 15', url: 'https://www.zerozero.pt/jogador/ruben-couto/1375287' },
+    { number: 50, name: 'Jogador', role: 'Ruben Couto', url: 'https://www.zerozero.pt/jogador/ruben-couto/1375287' },
     { number: 66, name: 'Jogador', role: 'Dylan Moreira', url: 'https://www.zerozero.pt/jogador/dylan-moreira/2778394' },
     { number: 88, name: 'Guarda-Redes', role: 'Arthur Manata', url: 'https://www.zerozero.pt/jogador/arthur-manata/2486932' },
     { number: 99, name: 'Guarda-Redes', role: 'Jogador 18', url: '' },
@@ -628,7 +588,7 @@ Ex.: Convocados para o jogo de sábado..." rows="10"></textarea><div class="conv
 
   renderCalendar();
   renderNextTraining();
-  // O próximo jogo não é apresentado publicamente.
+  renderNextGame();
   renderPlayers();
 
   try{
@@ -649,7 +609,7 @@ Ex.: Convocados para o jogo de sábado..." rows="10"></textarea><div class="conv
 <a href="#top" data-nav="top"><span class="ico">⌂</span><span>Início</span></a>
 <a href="#calendario" data-nav="calendario"><span class="ico">▦</span><span>Calendário</span></a>
 <a href="#jogos" data-nav="jogos"><span class="ico">⚽</span><span>Jogos</span></a>
-<a href="#equipa" data-nav="equipa"><span class="ico">👥</span><span>Plantel</span></a>
+<a href="#equipa" data-nav="equipa"><span class="ico">♙</span><span>Equipa</span></a>
 <a href="#avisos" data-nav="avisos"><span class="ico">☰</span><span>Mais</span></a>
 </nav>
 <button class="install-app" id="installApp">＋ Instalar App</button>
@@ -671,64 +631,4 @@ Ex.: Convocados para o jogo de sábado..." rows="10"></textarea><div class="conv
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(console.warn));
 }
-</script>
-<div class="password-modal" id="passwordModal" role="dialog" aria-modal="true" aria-labelledby="passwordTitle">
-  <div class="password-box">
-    <h3 id="passwordTitle">🔐 Área dos Pais</h3>
-    <p>Introduza a password para consultar os jogos e o calendário reservados.</p>
-    <input class="password-input" id="passwordInput" type="password" autocomplete="current-password" placeholder="Password">
-    <div class="password-error" id="passwordError"></div>
-    <div class="password-actions">
-      <button class="password-cancel" id="passwordCancel" type="button">Cancelar</button>
-      <button class="password-enter" id="passwordEnter" type="button">Entrar</button>
-    </div>
-  </div>
-</div>
-<script id="parents-area-auth">
-(function(){
-  // ALTERA A PASSWORD NESTA LINHA ANTES DE PUBLICAR.
-  const APP_PASSWORD = 'ADA2026';
-  const STORAGE_KEY = 'ad_argoncilhe_pais_auth';
-  const modal = document.getElementById('passwordModal');
-  const input = document.getElementById('passwordInput');
-  const error = document.getElementById('passwordError');
-  const cancelBtn = document.getElementById('passwordCancel');
-  const enterBtn = document.getElementById('passwordEnter');
-  const guards = [document.getElementById('gamesGuard'), document.getElementById('calendarGuard')].filter(Boolean);
-  const privateContents = [document.getElementById('gamesContent'), document.getElementById('calendarContent')].filter(Boolean);
-  const protectedIds = new Set(['jogos','calendario']);
-  const navLinks = [...document.querySelectorAll('.app-bottom-nav a')];
-  const convocationInput = document.getElementById('convocationText');
-  const convocationStatus = document.getElementById('convocationStatus');
-  const CONVOCATION_KEY = 'ad_argoncilhe_convocatoria';
-  function loadConvocation(){ if(convocationInput) convocationInput.value = localStorage.getItem(CONVOCATION_KEY) || ''; }
-  function saveConvocation(){ if(!convocationInput) return; localStorage.setItem(CONVOCATION_KEY, convocationInput.value); if(convocationStatus){ convocationStatus.textContent='Convocatória guardada neste dispositivo.'; setTimeout(()=>convocationStatus.textContent='',2500); } }
-  function clearConvocation(){ if(!convocationInput) return; convocationInput.value=''; localStorage.removeItem(CONVOCATION_KEY); if(convocationStatus) convocationStatus.textContent='Convocatória limpa neste dispositivo.'; }
-  document.getElementById('saveConvocation')?.addEventListener('click',saveConvocation);
-  document.getElementById('clearConvocation')?.addEventListener('click',clearConvocation);
-  loadConvocation();
-
-  function unlock(){
-    guards.forEach(g=>g.classList.add('hidden'));
-    privateContents.forEach(c=>c.classList.remove('private-hidden-content'));
-    sessionStorage.setItem(STORAGE_KEY,'1');
-    modal.classList.remove('show'); input.value=''; error.textContent='';
-    navLinks.filter(a=>protectedIds.has(a.dataset.nav)).forEach(a=>a.classList.add('authenticated'));
-  }
-  function showModal(){ modal.classList.add('show'); error.textContent=''; input.value=''; setTimeout(()=>input.focus(),50); }
-  function closeModal(){ modal.classList.remove('show'); input.value=''; error.textContent=''; }
-  function check(){ if(input.value===APP_PASSWORD) unlock(); else { error.textContent='Password incorreta. Tente novamente.'; input.select(); } }
-  if(sessionStorage.getItem(STORAGE_KEY)==='1') unlock();
-  document.querySelectorAll('[data-open-password]').forEach(b=>b.addEventListener('click',showModal));
-  cancelBtn.addEventListener('click',closeModal); enterBtn.addEventListener('click',check);
-  input.addEventListener('keydown',e=>{if(e.key==='Enter')check();if(e.key==='Escape')closeModal();});
-  modal.addEventListener('click',e=>{if(e.target===modal)closeModal();});
-  navLinks.forEach(a=>a.addEventListener('click',e=>{
-    if(protectedIds.has(a.dataset.nav) && sessionStorage.getItem(STORAGE_KEY)!=='1'){ e.preventDefault(); showModal(); }
-  }));
-  document.querySelectorAll('a[href="#jogos"], a[href="#calendario"]').forEach(a=>a.addEventListener('click',e=>{
-    if(sessionStorage.getItem(STORAGE_KEY)!=='1'){ e.preventDefault(); showModal(); }
-  }));
-})();
-</script>
-</body></html>
+</script></body></html>
