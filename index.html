@@ -436,7 +436,7 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
           activity: isCanceled ? '<span class="canceled-text">Treino (CANCELADO)</span>' : 'Treino',
           time: isCanceled ? '—' : '18:00–19:30',
           place: 'Campo CS Argoncilhe',
-          description: isCanceled ? '<span class="canceled-text">Treino Cancelado</span>' : 'Trabalho técnico-tático',
+          description: isCanceled ? '<span class="canceled-text">Treino Cancelado</span>' : 'Trabalho Técnico-tático',
           filterType: 'treino',
           isCanceled: isCanceled
         });
@@ -526,7 +526,7 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
     const todayKey = localDateKey(today);
     const dKey = localDateKey(d);
     document.getElementById('nextTag').textContent =
-      dKey === todayKey ? 'técnico-tático' : (d.getTime() === seasonStart.getTime() ? 'PRÉ-ÉPOCA' : 'técnico-tático');
+      dKey === todayKey ? 'Técnico-tático' : (d.getTime() === seasonStart.getTime() ? 'PRÉ-ÉPOCA' : 'Técnico-tático');
   }
 
   function nextGame(from = new Date()){
