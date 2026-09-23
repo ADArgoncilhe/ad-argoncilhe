@@ -36,6 +36,11 @@ section h2{font-size:21px;letter-spacing:-.02em}
 .calendar-table{border-radius:16px;overflow:hidden;border:1px solid var(--app-border);background:#fff}
 .players{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
 .player{border-radius:18px!important;border:1px solid var(--app-border)!important;background:#fff!important;min-height:132px;padding:13px!important;box-shadow:0 3px 12px rgba(0,0,0,.04)}
+.player-photo{width:82px;height:82px;margin:0 auto 10px;border-radius:50%;overflow:hidden;background:linear-gradient(145deg,#171717,#3a3a3a);border:3px solid #111;box-shadow:0 2px 10px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;position:relative}
+.player-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.player-photo .photo-fallback{font-size:25px;font-weight:900;color:#fff;letter-spacing:-1px}
+.player .num{position:absolute;top:8px;right:10px;font-size:20px!important;line-height:1;background:#111;color:#fff;padding:5px 7px;border-radius:9px;z-index:2}
+.player{position:relative;padding-top:14px!important}
 .player .num{font-size:25px!important;font-weight:900!important}
 .player .web{font-size:11px!important;margin-top:9px}
 .app-bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:200;height:74px;padding:7px 10px calc(7px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(5,1fr);gap:5px;background:rgba(255,255,255,.96);backdrop-filter:blur(18px);border-top:1px solid #ddd;box-shadow:0 -6px 24px rgba(0,0,0,.08)}
@@ -566,41 +571,72 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
   // 👥 JOGADORES
   // ============================================================
 const players = [
-    { number: 7, name: 'Jogador', role: 'Francisco Oliveira', url: 'https://www.zerozero.pt/jogador/francisco-oliveira/1289568' },
-    { number: 9, name: 'Jogador', role: 'Vicente Lopes', url: 'https://www.zerozero.pt/jogador/vicente-lopes/1289570?epoca_id=156' },
-    { number: 10, name: 'Jogador', role: 'Salvador Silva', url: 'https://www.zerozero.pt/jogador/salvador-silva/1335274' },
-    { number: 11, name: 'Jogador', role: 'Valentino Félix', url: 'https://www.zerozero.pt/jogador/vitor-felix/1199139' },
-    { number: 12, name: 'Jogador', role: 'Tomás Silva', url: 'https://www.zerozero.pt/jogador/tomas-silva/1289569' },
-    { number: 20, name: 'Jogador', role: 'Rodrigo Costa', url: 'https://www.zerozero.pt/jogador/rodrigo-costa/2780943' },
-    { number: 21, name: 'Jogador', role: 'Afonso Carrilho', url: 'https://www.zerozero.pt/jogador/afonso-carrilho/2841920' },
-    { number: 23, name: 'Jogador', role: 'Dinis Ferreira', url: 'https://www.zerozero.pt/jogador/dinis-ferreira/2056689' },
-    { number: 24, name: 'Jogador', role: 'Joana Tavares', url: 'https://www.zerozero.pt/jogador/joana-tavares/2526658' },
-    { number: 25, name: 'Guarda-Redes', role: 'Rodrigo Tavares', url: 'https://www.zerozero.pt/jogador/rodrigo-tavares/2841921' },
-    { number: 26, name: 'Jogador', role: 'Artur Oliveira', url: 'https://www.zerozero.pt/jogador/artur-oliveira/1289564' },
-    { number: 30, name: 'Jogador', role: 'Gabriel Pedrosa', url: 'https://www.zerozero.pt/jogador/gabriel-pedrosa/3601006' },
-    { number: 44, name: 'Guarda-Redes', role: 'Lucas Castro', url: 'https://www.zerozero.pt/jogador/lucas-castro/1529730' },
-    { number: 50, name: 'Jogador', role: 'Ruben Couto', url: 'https://www.zerozero.pt/jogador/ruben-couto/1375287' },
-    { number: 66, name: 'Jogador', role: 'Dylan Moreira', url: 'https://www.zerozero.pt/jogador/dylan-moreira/2778394' },
-    { number: 88, name: 'Guarda-Redes', role: 'Arthur Manata', url: 'https://www.zerozero.pt/jogador/arthur-manata/2486932' },
-    { number: 99, name: 'Jogador', role: 'Jogador 17', url: '' },
-    { number: 99, name: 'Jogador', role: 'Jogador 18', url: '' },
-    { number: 00, name: 'Treinador', role: 'Tiago Oliveira', url: 'https://www.zerozero.pt/treinador/tiago-oliveira/98623' },
-    { number: 00, name: 'Coordenador', role: 'Mickael Amaral', url: '' },
-    { number: 00, name: 'Team-Manager', role: 'André Silva', url: '' },
-  ];
+     { number: 7, name: 'Jogador', role: 'Francisco Oliveira', url: 'https://www.zerozero.pt/jogador/francisco-oliveira/1289568' },
+     { number: 9, name: 'Jogador', role: 'Vicente Lopes', url: 'https://www.zerozero.pt/jogador/vicente-lopes/1289570?epoca_id=156' },
+     { number: 10, name: 'Jogador', role: 'Salvador Silva', url: 'https://www.zerozero.pt/jogador/salvador-silva/1335274' },
+     { number: 11, name: 'Jogador', role: 'Valentino Félix', url: 'https://www.zerozero.pt/jogador/vitor-felix/1199139' },
+     { number: 12, name: 'Jogador', role: 'Tomás Silva', url: 'https://www.zerozero.pt/jogador/tomas-silva/1289569' },
+     { number: 20, name: 'Jogador', role: 'Rodrigo Costa', url: 'https://www.zerozero.pt/jogador/rodrigo-costa/2780943' },
+     { number: 21, name: 'Jogador', role: 'Afonso Carrilho', url: 'https://www.zerozero.pt/jogador/afonso-carrilho/2841920' },
+     { number: 23, name: 'Jogador', role: 'Dinis Ferreira', url: 'https://www.zerozero.pt/jogador/dinis-ferreira/2056689' },
+     { number: 24, name: 'Jogador', role: 'Joana Tavares', url: 'https://www.zerozero.pt/jogador/joana-tavares/2526658' },
+     { number: 25, name: 'Guarda-Redes', role: 'Rodrigo Tavares', url: 'https://www.zerozero.pt/jogador/rodrigo-tavares/2841921' },
+     { number: 26, name: 'Jogador', role: 'Artur Oliveira', url: 'https://www.zerozero.pt/jogador/artur-oliveira/1289564' },
+     { number: 30, name: 'Jogador', role: 'Gabriel Pedrosa', url: 'https://www.zerozero.pt/jogador/gabriel-pedrosa/3601006' },
+     { number: 44, name: 'Guarda-Redes', role: 'Lucas Castro', url: 'https://www.zerozero.pt/jogador/lucas-castro/1529730' },
+     { number: 50, name: 'Jogador', role: 'Ruben Couto', url: 'https://www.zerozero.pt/jogador/ruben-couto/1375287' },
+     { number: 66, name: 'Jogador', role: 'Dylan Moreira', url: 'https://www.zerozero.pt/jogador/dylan-moreira/2778394' },
+     { number: 88, name: 'Guarda-Redes', role: 'Arthur Manata', url: 'https://www.zerozero.pt/jogador/arthur-manata/2486932' },
+     { number: 99, name: 'Jogador', role: 'Jogador 17', url: '' },
+     { number: 99, name: 'Jogador', role: 'Jogador 18', url: '' },
+     { number: 0, name: 'Treinador', role: 'Tiago Oliveira', url: 'https://www.zerozero.pt/treinador/tiago-oliveira/98623' },
+     { number: 0, name: 'Coordenador', role: 'Mickael Amaral', url: '' },
+     { number: 0, name: 'Team-Manager', role: 'André Silva', url: '' },
+   ];
 
-  function renderPlayers(){
-    const grid = document.getElementById('playersGrid');
-    grid.innerHTML = players.map(p => {
-      const targetUrl = p.url || `https://www.google.com/search?q=${encodeURIComponent(p.name + ' futebol')}`;
-      return `<a class="player player-link" href="${targetUrl}" target="_blank" rel="noopener noreferrer" title="Abrir página de ${p.name}">
-        <div class="num">${p.number}</div>
-        <strong>${p.role}</strong>
-        <div class="role">${p.name}</div>
-        <div class="web">↗ Abrir na web</div>
-      </a>`;
-    }).join('');
-  }
+   function initials(name){
+     return (name || '?').split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase();
+   }
+
+   function renderPlayers(){
+     const grid = document.getElementById('playersGrid');
+     grid.innerHTML = players.map((p,i) => {
+       const targetUrl = p.url || `https://www.google.com/search?q=${encodeURIComponent(p.role + ' futebol')}`;
+       return `<a class="player player-link" href="${targetUrl}" target="_blank" rel="noopener noreferrer" title="Abrir página de ${p.role}">
+         <div class="player-photo" data-player-index="${i}"><span class="photo-fallback">${initials(p.role)}</span></div>
+         <div class="num">${p.number || ''}</div>
+         <strong>${p.role}</strong>
+         <div class="role">${p.name}</div>
+         <div class="web">↗ Abrir na web</div>
+       </a>`;
+     }).join('');
+     loadPlayerPhotos();
+   }
+
+   async function loadPlayerPhotos(){
+     const boxes = [...document.querySelectorAll('.player-photo[data-player-index]')];
+     await Promise.allSettled(boxes.map(async box => {
+       const p = players[Number(box.dataset.playerIndex)];
+       if(!p?.url) return;
+       try{
+         const proxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(p.url);
+         const response = await fetch(proxy, {mode:'cors'});
+         if(!response.ok) return;
+         const html = await response.text();
+         const doc = new DOMParser().parseFromString(html,'text/html');
+         const meta = doc.querySelector('meta[property="og:image"],meta[name="twitter:image"]');
+         const imageUrl = meta?.content;
+         if(!imageUrl) return;
+         const img = document.createElement('img');
+         img.alt = `Fotografia de ${p.role}`;
+         img.loading = 'lazy';
+         img.referrerPolicy = 'no-referrer';
+         img.src = imageUrl;
+         img.onerror = () => img.remove();
+         box.replaceChildren(img);
+       }catch(e){ console.warn('Fotografia não carregada:', p.role, e); }
+     }));
+   }
 
   document.getElementById('prevMonth').addEventListener('click',()=>{
     if(view.getFullYear() === 2026 && view.getMonth() === 7) return;
