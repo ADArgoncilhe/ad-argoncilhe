@@ -594,6 +594,27 @@ const players = [
      { number: 0, name: 'Team-Manager', role: 'André Silva', url: '' },
    ];
 
+   // ============================================================
+   // 📷 FOTOGRAFIAS DO PLANTEL
+   // Basta colocar a fotografia na pasta /fotos com o nome do jogador.
+   // Ex.: Francisco Oliveira -> fotos/francisco-oliveira.jpg
+   // Ao adicionar um jogador à lista acima, não é necessário indicar
+   // o caminho da fotografia: ele é criado automaticamente a partir do nome.
+   // ============================================================
+   function photoSlug(name){
+     return (name || '')
+       .normalize('NFD')
+       .replace(/[\u0300-\u036f]/g, '')
+       .toLowerCase()
+       .trim()
+       .replace(/[^a-z0-9]+/g, '-')
+       .replace(/^-+|-+$/g, '');
+   }
+
+   function photoPath(name){
+     return `fotos/${photoSlug(name)}.jpg`;
+   }
+
    function initials(name){
      return (name || '?').split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase();
    }
@@ -602,41 +623,20 @@ const players = [
      const grid = document.getElementById('playersGrid');
      grid.innerHTML = players.map((p,i) => {
        const targetUrl = p.url || `https://www.google.com/search?q=${encodeURIComponent(p.role + ' futebol')}`;
+       const photo = photoPath(p.role);
        return `<a class="player player-link" href="${targetUrl}" target="_blank" rel="noopener noreferrer" title="Abrir página de ${p.role}">
-         <div class="player-photo" data-player-index="${i}"><span class="photo-fallback">${initials(p.role)}</span></div>
+         <div class="player-photo" data-player-index="${i}">
+           <img src="${photo}" alt="Fotografia de ${p.role}" loading="lazy" onerror="this.remove(); this.parentElement.querySelector('.photo-fallback').style.display='flex';">
+           <span class="photo-fallback" style="display:none">${initials(p.role)}</span>
+         </div>
          <div class="num">${p.number || ''}</div>
          <strong>${p.role}</strong>
          <div class="role">${p.name}</div>
          <div class="web">↗ Abrir na web</div>
        </a>`;
      }).join('');
-     loadPlayerPhotos();
    }
 
-   async function loadPlayerPhotos(){
-     const boxes = [...document.querySelectorAll('.player-photo[data-player-index]')];
-     await Promise.allSettled(boxes.map(async box => {
-       const p = players[Number(box.dataset.playerIndex)];
-       if(!p?.url) return;
-       try{
-         const proxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(p.url);
-         const response = await fetch(proxy, {mode:'cors'});
-         if(!response.ok) return;
-         const html = await response.text();
-         const doc = new DOMParser().parseFromString(html,'text/html');
-         const meta = doc.querySelector('meta[property="og:image"],meta[name="twitter:image"]');
-         const imageUrl = meta?.content;
-         if(!imageUrl) return;
-         const img = document.createElement('img');
-         img.alt = `Fotografia de ${p.role}`;
-         img.loading = 'lazy';
-         img.referrerPolicy = 'no-referrer';
-         img.src = imageUrl;
-         img.onerror = () => img.remove();
-         box.replaceChildren(img);
-       }catch(e){ console.warn('Fotografia não carregada:', p.role, e); }
-     }));
-   }
 
   document.getElementById('prevMonth').addEventListener('click',()=>{
     if(view.getFullYear() === 2026 && view.getMonth() === 7) return;
