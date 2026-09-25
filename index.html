@@ -727,7 +727,7 @@ const players = [
     box.innerHTML=notices.map((n,i)=>`<div class="notice">${n.type ? `<span class="notice-type">${n.type}</span>` : ''}<strong>${n.title || 'Aviso'}</strong>${n.text ? `<br><span class="muted">${n.text}</span>` : ''}</div>`).join('');
   }
 
-  renderNotices([{title:'Época 2026/2027',text:'CAMPEŌES ADAS CUP 2026.'}]);
+  renderNotices([{title:'Época 2026/2027',text:'CAMPEŌES ADAS CUP 2026.'}{text:'CAMPEŌES BROINHAS CUP 2026.'}]);
 
   try{
     if(window.SUPABASE_URL && window.SUPABASE_KEY && window.supabase){
