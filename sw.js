@@ -1,4 +1,5 @@
-const CACHE_NAME = "ad-argoncilhe-sub10-v1";
+const BUILD_ID = "20260925181935";
+const CACHE_NAME = `ad-argoncilhe-sub10-${BUILD_ID}`;
 const APP_SHELL = ["./", "./index.html", "./manifest.json", "./icons/icon-180.png", "./icons/icon-192.png", "./icons/icon-512.png"];
 
 self.addEventListener("install", event => {
