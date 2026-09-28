@@ -106,7 +106,7 @@ section h2{font-size:21px;letter-spacing:-.02em}
 </style>
 </head>
 <meta name="description" content="Página informativa da equipa AD Argoncilhe para pais e atletas.">
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="manifest.json?v=20260928223000">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <meta name="theme-color" content="#080808">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -772,7 +772,10 @@ const players = [
    try{
      if('serviceWorker' in navigator){
        const regs=await navigator.serviceWorker.getRegistrations();
-       await Promise.all(regs.map(r=>r.update().catch(()=>{})));
+       await Promise.all(regs.map(async r=>{
+         try{ await r.update(); }catch(e){}
+         try{ await r.unregister(); }catch(e){}
+       }));
      }
      if(window.caches){
        const names=await caches.keys();
@@ -780,7 +783,7 @@ const players = [
      }
    }catch(e){console.warn(e)}
    const url=new URL(window.location.href);
-   url.searchParams.set('refresh',Date.now());
+   url.searchParams.set('refresh',Date.now().toString());
    window.location.replace(url.toString());
  }
  refreshBtn?.addEventListener('click',refreshApp);
@@ -788,7 +791,7 @@ const players = [
 </script>
 <script>
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js?v=20260925-2', { updateViaCache: 'none' }).then(reg => { reg.update().catch(() => {}); }).catch(console.warn));
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js?v=20260928223000', { updateViaCache: 'none' }).then(reg => { reg.update().catch(() => {}); }).catch(console.warn));
 }
 </script>
 <div class="password-modal" id="passwordModal" role="dialog" aria-modal="true" aria-labelledby="passwordTitle">

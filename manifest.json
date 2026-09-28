@@ -1,6 +1,7 @@
 {
   "name": "AD Argoncilhe Sub-10",
   "short_name": "AD Argoncilhe",
+  "id": "./",
   "description": "Informação, treinos, jogos e avisos da equipa AD Argoncilhe Sub-10.",
   "start_url": "./",
   "scope": "./",
