@@ -81,9 +81,6 @@ section h2{font-size:21px;letter-spacing:-.02em}
 
 .private-section .private-hidden-content{display:none}
 .private-section .private-hidden-content.unlocked{display:block}
-.parent-session-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:10px 0 14px;padding:10px 12px;border:1px solid #3a3a3a;border-radius:12px;background:#171717;color:#fff;font-size:13px}
-.parent-session-bar[hidden]{display:none!important}
-.parent-session-bar button{border:1px solid #555;background:#fff;color:#111;border-radius:8px;padding:6px 11px;font-weight:700;cursor:pointer}
 .private-guard{background:linear-gradient(145deg,#171717,#101010);border:1px solid var(--line);border-radius:18px;padding:28px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:9px}
 .private-guard.hidden{display:none}
 .private-guard strong{font-size:18px}.private-guard span{color:var(--muted);font-size:14px}
@@ -125,6 +122,11 @@ section h2{font-size:21px;letter-spacing:-.02em}
 .fase3-panel input,.fase3-panel textarea,.fase3-panel select{width:100%;box-sizing:border-box;padding:10px;border:1px solid #bbb;border-radius:9px;background:inherit;color:inherit;margin:5px 0 9px;font:inherit}
 .fase3-panel textarea{min-height:110px;resize:vertical}.admin-list{display:grid;gap:7px;margin-top:10px}.admin-row{display:flex;gap:8px;align-items:center;justify-content:space-between;border:1px solid rgba(128,128,128,.25);border-radius:10px;padding:9px}.admin-row span{min-width:0;overflow:hidden;text-overflow:ellipsis}.admin-row button{border:1px solid #bbb;background:transparent;border-radius:8px;padding:6px 9px;cursor:pointer}
 .fase3-status{font-size:13px;min-height:20px;margin-top:8px}.fase3-manage-btn{display:none}.fase3-manage-btn.show{display:inline-flex}
+.coach-ack-summary{font-weight:800;margin-bottom:8px}
+.coach-ack-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.coach-ack-row .ack-name{font-weight:800}
+.coach-ack-row .ack-date{font-size:12px;color:#b8b8b8}
+.coach-ack-ok{color:#111;background:#fff;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:900;white-space:nowrap}
 .rsvp-box{margin-top:14px;padding-top:14px;border-top:1px solid rgba(128,128,128,.2)}.rsvp-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.rsvp-actions button{border:1px solid #888;background:transparent;color:inherit;border-radius:9px;padding:9px 12px;cursor:pointer;font-weight:700}.rsvp-actions button.active{background:#fff;color:#000}
 @media(max-width:760px){.fase3-panel .admin-grid{grid-template-columns:1fr}}
 
@@ -209,10 +211,7 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
 </div></div></section>
 
 <section id="jogos" class="private-section"><div class="wrap"><div class="section-head"><h2>⚽ Jogos</h2><span class="muted">Jogo(s) de hoje</span></div><div id="todayGamesPublic"></div><div class="private-guard" id="gamesGuard"><div class="lock-icon">🔒</div><strong>Área dos Pais</strong><span>Introduza a password para consultar a convocatória.</span><button class="private-btn" type="button" data-open-password>🔑 Aceder</button></div><div class="notice private-hidden-content" id="gamesContent"><div class="parents-area"><div class="section-head" style="margin-bottom:10px"><div><h3 style="margin:0">📋 Convocatória</h3><span class="muted">Área reservada aos pais</span></div></div><div id="convocationText" class="convocation-display" aria-live="polite" style="white-space:pre-wrap;line-height:1.65;font-size:15px;padding:14px 0;"></div>
-<div id="convocationAthletes" class="convocation-athletes" aria-live="polite"></div><div id="parentSessionBar" class="parent-session-bar" hidden>
-  <span>✓ Sessão iniciada</span>
-  <button type="button" id="parentLogout">Sair</button>
-</div>
+<div id="convocationAthletes" class="convocation-athletes" aria-live="polite"></div>
 <div class="ack-status" id="ackStatus"></div><div class="push-card"><strong>🔔 Notificações</strong><div class="muted">Receba um aviso neste dispositivo quando a aplicação for atualizada enquanto estiver aberta.</div><button type="button" class="private-btn" id="enableNotifications">Ativar notificações</button><div class="ack-status" id="notificationStatus"></div></div></div></div></div></section>
 <section id="calendario" class="private-section"><div class="wrap">
 <div class="section-head">
@@ -249,6 +248,11 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
 <div class="admin-card"><strong>Estado</strong><div class="fase3-status" id="coachStatus">Ligado à base de dados.</div></div>
 <div class="admin-grid">
 <div class="admin-card"><h3>📢 Novo aviso</h3><input id="adminNoticeTitle" placeholder="Título"><select id="adminNoticeType"><option>Informação</option><option>Importante</option><option>Urgente</option></select><textarea id="adminNoticeText" placeholder="Texto do aviso"></textarea><button class="btn" id="adminAddNotice" type="button">Publicar aviso</button><div class="admin-list" id="adminNoticeList"></div></div>
+<div class="admin-card"><h3>✅ Confirmações da convocatória</h3>
+<p class="muted">Consulta quem já indicou que tomou conhecimento da convocatória atual.</p>
+<div id="coachAckSummary" class="fase3-status">A carregar…</div>
+<div id="coachAckList" class="admin-list"></div>
+</div>
 <div class="admin-card"><h3>📋 Convocatória</h3><textarea id="adminConvocation" placeholder="Texto da convocatória"></textarea><label style="display:block;margin-top:12px;font-weight:800">Atletas convocados</label><textarea id="adminConvocationAthletes" placeholder="Um atleta por linha&#10;Ex.: Francisco Oliveira&#10;Tomás Silva&#10;Rodrigo Costa" style="min-height:140px"></textarea><button class="btn" id="adminSaveConvocation" type="button">Guardar convocatória</button><div class="fase3-status" id="coachStatus"></div></div>
 <div class="admin-card"><h3>⚽ Novo jogo</h3><input id="adminGameDate" placeholder="DD/MM/AAAA"><input id="adminGameOpponent" placeholder="Adversário"><input id="adminGameTime" placeholder="11:30"><input id="adminGamePlace" placeholder="Local"><select id="adminGameType"><option>Jogo</option><option>Torneio</option><option>Campeonato</option></select><select id="adminGameHome"><option value="C">Casa</option><option value="F">Fora</option></select><input id="adminGameDescription" placeholder="Descrição"><button class="btn" id="adminAddGame" type="button">Adicionar jogo</button><div class="admin-list" id="adminGameList"></div></div>
 <div class="admin-card"><h3>🏃 Novo treino</h3><input id="adminTrainingDate" placeholder="DD/MM/AAAA"><input id="adminTrainingTime" placeholder="18:00–19:30"><input id="adminTrainingPlace" placeholder="Local"><input id="adminTrainingDescription" placeholder="Descrição"><button class="btn" id="adminAddTraining" type="button">Adicionar treino</button><div class="admin-list" id="adminTrainingList"></div></div>
@@ -872,10 +876,7 @@ let currentUser=null;
 const $=id=>document.getElementById(id);
 function setStatus(id,msg){const e=$(id);if(e)e.textContent=msg||""}
 function openLogin(){ $("fase3Login")?.classList.add("show"); $("fase3AuthError").textContent=""; setTimeout(()=>$("fase3Email")?.focus(),50)}
-function closeLogin(){ $("fase3Login")?.classList.remove("show") } 
-function showParentSession(){const bar=$("parentSessionBar");if(bar)bar.hidden=false}
-function hideParentSession(){const bar=$("parentSessionBar");if(bar)bar.hidden=true}
-function setAuthError(msg){const e=$("fase3AuthError");if(e)e.textContent=msg||""}
+function closeLogin(){ $("fase3Login")?.classList.remove("show") }
 async function getClient(){
  if(client)return client;
  if(window.SUPABASE_URL&&window.SUPABASE_KEY&&window.supabase){client=supabase.createClient(window.SUPABASE_URL,window.SUPABASE_KEY);return client}
@@ -919,39 +920,29 @@ function renderConvocationAthletes(){
 }
 async function acknowledgeAthlete(name,button){
  if(!currentUser){openLogin();return}
- try{const c=await getClient(),event_id=convocationEventId();const r=await c.from("team_convocation_ack").upsert({event_id,user_id:currentUser.id,athlete:name,acknowledged:true,updated_at:new Date().toISOString()},{onConflict:"event_id,user_id,athlete"});if(r.error)throw r.error;button.classList.add("active");button.textContent="✓ Tomei conhecimento";setStatus("ackStatus","Conhecimento registado.");}catch(e){setStatus("ackStatus","Não foi possível registar: "+e.message)}}
+ try{const c=await getClient(),event_id=convocationEventId();const r=await c.from("team_convocation_ack").upsert({event_id,user_id:currentUser.id,athlete:name,acknowledged:true,updated_at:new Date().toISOString()},{onConflict:"event_id,user_id,athlete"});if(r.error)throw r.error;button.classList.add("active");button.textContent="✓ Tomei conhecimento";setStatus("ackStatus","Conhecimento registado.");
+  if((currentUser?.app_metadata?.role||"parent")==="coach")loadCoachAcknowledgements();}catch(e){setStatus("ackStatus","Não foi possível registar: "+e.message)}}
 
 async function loadContent(){
  try{const c=await getClient();const r=await c.from("team_content").select("content").eq("id","main").maybeSingle();if(r.error)throw r.error;if(r.data?.content)publicContent(r.data.content)}catch(e){console.warn(e)}
 }
 async function signIn(){
- const email=$("fase3Email")?.value.trim(),password=$("fase3Password")?.value;
- setAuthError("");
- if(!email||!password){setAuthError("Introduza email e password.");return}
- const btn=$("fase3LoginBtn");
- if(btn){btn.disabled=true;btn.textContent="A entrar…";}
+ const email=$("fase3Email").value.trim(),password=$("fase3Password").value;
+ if(!email||!password){$("fase3AuthError").textContent="Introduza email e password.";return}
+ $("fase3LoginBtn").disabled=true;
  try{
-  const c=await getClient();
-  const r=await c.auth.signInWithPassword({email,password});
+  const c=await getClient(),r=await c.auth.signInWithPassword({email,password});
   if(r.error)throw r.error;
-  if(!r.data?.session||!r.data?.user)throw new Error("O Supabase não devolveu uma sessão.");
   currentUser=r.data.user;
   const role=currentUser?.app_metadata?.role||"parent";
-  closeLogin();
-  sessionStorage.setItem("ad_argoncilhe_auth","1");
-  showParentSession();
+  closeLogin();sessionStorage.setItem("ad_argoncilhe_auth","1");
+  if(Array.isArray(content.notices))renderNotices(content.notices,true);
   document.querySelectorAll("[data-open-password]").forEach(b=>b.closest(".private-guard")?.classList.add("hidden"));
   document.querySelectorAll(".private-hidden-content").forEach(e=>e.classList.remove("private-hidden-content"));
-  if(Array.isArray(content.notices))renderNotices(content.notices,true);
-  if(role==="coach")showCoach();
-  else {renderConvocationAthletes();setStatus("ackStatus","Sessão iniciada. Pode consultar a convocatória.");}
- }catch(e){
-  currentUser=null;
-  hideParentSession();
-  setAuthError(e?.message||"Não foi possível iniciar sessão. Verifique o email e a password.");
- }finally{
-  if(btn){btn.disabled=false;btn.textContent="Entrar";}
- }
+  if(role==="coach")showCoach();else renderConvocationAthletes();
+  if(role==="coach")loadCoachAcknowledgements();
+ }catch(e){$("fase3AuthError").textContent=e.message||"Não foi possível iniciar sessão."}
+ finally{$("fase3LoginBtn").disabled=false}
 }
 function showCoach(){
  const role=currentUser?.app_metadata?.role||"parent";
@@ -959,6 +950,7 @@ function showCoach(){
  $("gestao-equipa")?.classList.add("show");
  $("gestao-equipa")?.scrollIntoView({behavior:"smooth"});
  renderAdmin();
+ loadCoachAcknowledgements();
 }
 async function save(){
  const c=await getClient();setStatus("adminSaveStatus","A guardar…");
@@ -975,6 +967,36 @@ function renderAdmin(){
  if($("adminConvocation"))$("adminConvocation").value=content.convocation||"";
  if($("adminConvocationAthletes"))$("adminConvocationAthletes").value=(content.convocationAthletes||[]).join("\n");
 }
+
+async function loadCoachAcknowledgements(){
+ const summary=$("coachAckSummary"),list=$("coachAckList");
+ if(!summary||!list)return;
+ const role=currentUser?.app_metadata?.role||"parent";
+ if(role!=="coach"){summary.textContent="Acesso reservado ao treinador.";list.innerHTML="";return}
+ const eventId=convocationEventId();
+ try{
+  const c=await getClient();
+  const r=await c.from("team_convocation_ack")
+    .select("athlete,user_id,acknowledged,updated_at")
+    .eq("event_id",eventId)
+    .eq("acknowledged",true)
+    .order("updated_at",{ascending:false});
+  if(r.error)throw r.error;
+  const rows=r.data||[];
+  const athletes=Array.isArray(content.convocationAthletes)?content.convocationAthletes.filter(Boolean):[];
+  summary.textContent=rows.length
+    ? `${rows.length} confirmação${rows.length===1?"":"ões"} registada${rows.length===1?"":"s"} · ${athletes.length?athletes.length+" atletas convocados":""}`
+    : "Ainda não existem confirmações.";
+  list.innerHTML=rows.length ? rows.map(row=>{
+    const when=row.updated_at ? new Date(row.updated_at).toLocaleString("pt-PT",{dateStyle:"short",timeStyle:"short"}) : "";
+    return `<div class="admin-row coach-ack-row"><span><span class="ack-name">${String(row.athlete||"Atleta")}</span><br><span class="ack-date">${when}</span></span><span class="coach-ack-ok">✓ Tomou conhecimento</span></div>`;
+  }).join("") : '<div class="muted">Nenhum atleta confirmou ainda.</div>';
+ }catch(e){
+  summary.textContent="Não foi possível carregar as confirmações.";
+  list.innerHTML=`<div class="muted">${String(e?.message||"Erro ao consultar as confirmações.")}</div>`;
+ }
+}
+
 document.addEventListener("click",async e=>{
  if(e.target.closest("[data-open-password]")){e.preventDefault();openLogin()}
  if(e.target.id==="fase3Cancel")closeLogin();
@@ -984,19 +1006,19 @@ document.addEventListener("click",async e=>{
   else if((currentUser.app_metadata?.role||"parent")==="coach"){showCoach();}
   else {$("fase3AuthError").textContent="Acesso reservado ao treinador.";openLogin();}
 }
- if(e.target.id==="coachLogout"||e.target.id==="parentLogout"){
-  try{await (await getClient()).auth.signOut()}catch(err){console.warn(err)}
-  currentUser=null;hideParentSession();sessionStorage.removeItem("ad_argoncilhe_auth");
-  document.querySelectorAll(".private-hidden-content").forEach(x=>x.classList.add("private-hidden-content"));
-  document.querySelectorAll(".private-guard").forEach(x=>x.classList.remove("hidden"));
-  $("gestao-equipa")?.classList.remove("show");renderConvocationAthletes();
-}
+ if(e.target.id==="coachLogout"){try{(await getClient()).auth.signOut()}catch(_){}location.reload()}
  if(e.target.matches("[data-athlete]"))acknowledgeAthlete(e.target.dataset.athlete,e.target);
  if(e.target.id==="enableNotifications")enableNotifications();
  if(e.target.id==="adminAddNotice"){content.notices=content.notices||[];content.notices.unshift({title:$("adminNoticeTitle").value.trim(),type:$("adminNoticeType").value,text:$("adminNoticeText").value.trim()});$("adminNoticeTitle").value="";$("adminNoticeText").value="";renderAdmin()}
  if(e.target.id==="adminAddGame"){content.games=content.games||[];content.games.push({data:$("adminGameDate").value.trim(),adversario:$("adminGameOpponent").value.trim(),hora:$("adminGameTime").value.trim(),local:$("adminGamePlace").value.trim(),tipo:$("adminGameType").value,casaFora:$("adminGameHome").value,descricao:$("adminGameDescription").value.trim()});renderAdmin()}
  if(e.target.id==="adminAddTraining"){content.trainings=content.trainings||[];content.trainings.push({data:$("adminTrainingDate").value.trim(),hora:$("adminTrainingTime").value.trim(),local:$("adminTrainingPlace").value.trim(),descricao:$("adminTrainingDescription").value.trim()});renderAdmin()}
- if(e.target.id==="adminSaveConvocation"){content.convocation=$("adminConvocation").value;content.convocationAthletes=$("adminConvocationAthletes").value.split(/\n/).map(x=>x.trim()).filter(Boolean);renderAdmin();renderConvocationAthletes();setStatus("coachStatus","Convocatória atualizada.")}
+ if(e.target.id==="adminSaveConvocation"){
+  content.convocation=$("adminConvocation").value;
+  content.convocationAthletes=$("adminConvocationAthletes").value.split(/\n/).map(x=>x.trim()).filter(Boolean);
+  renderAdmin();renderConvocationAthletes();setStatus("coachStatus","Convocatória atualizada.");
+  await save();
+  await loadCoachAcknowledgements();
+}
  if(e.target.id==="adminSaveAll")save();
  const dn=e.target.closest("[data-del-notice]");if(dn){content.notices.splice(+dn.dataset.delNotice,1);renderAdmin()}
  const dg=e.target.closest("[data-del-game]");if(dg){content.games.splice(+dg.dataset.delGame,1);renderAdmin()}
@@ -1007,16 +1029,17 @@ $("fase3Password")?.addEventListener("keydown",e=>{if(e.key==="Enter")signIn()})
 (async()=>{try{const c=await getClient();const s=await c.auth.getSession();if(s.data.session){
   currentUser=s.data.session.user;
   const role=currentUser.app_metadata?.role||"parent";
-  showParentSession();
   document.querySelectorAll(".private-guard").forEach(x=>x.classList.add("hidden"));
   document.querySelectorAll(".private-hidden-content").forEach(x=>x.classList.remove("private-hidden-content"));
   if(role==="coach")showCoach();else renderConvocationAthletes();
+  if(role==="coach")loadCoachAcknowledgements();
 }else{renderConvocationAthletes()}}catch(e){} await loadContent(); setupLiveUpdates(); if(currentUser){renderNotices(content.notices||[],true);renderConvocationAthletes();}
 function setupLiveUpdates(){
  try{
   const c=client; if(!c)return;
   c.channel("team-content-live").on("postgres_changes",{event:"UPDATE",schema:"public",table:"team_content",filter:"id=eq.main"},payload=>{
     const oldC=content||{}; publicContent(payload.new?.content||{});
+    if((currentUser?.app_metadata?.role||"parent")==="coach")loadCoachAcknowledgements();
     if(Notification.permission==="granted" && document.visibilityState!=="visible") new Notification("AD Argoncilhe Sub-10",{body:"A aplicação foi atualizada."});
   }).subscribe();
  }catch(e){console.warn(e)}
