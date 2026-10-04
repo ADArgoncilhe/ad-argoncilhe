@@ -139,7 +139,7 @@ section h2{font-size:21px;letter-spacing:-.02em}
 </style>
 </head>
 <meta name="description" content="Página informativa da equipa AD Argoncilhe para pais e atletas.">
-<link rel="manifest" href="manifest.json?v=20261004-12">
+<link rel="manifest" href="manifest.json?v=20261004-13">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <meta name="theme-color" content="#080808">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -886,7 +886,7 @@ if ('serviceWorker' in navigator) {
   });
   window.addEventListener('load', async()=>{
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=20261004-12',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=20261004-13',{updateViaCache:'none'});
       await reg.update();
       if(reg.waiting)reg.waiting.postMessage({type:'SKIP_WAITING'});
     }catch(e){console.warn('Service Worker:',e)}
@@ -1040,17 +1040,20 @@ function showCoach(){
  loadCoachAcknowledgements();
 }
 async function save(){
- const c=await getClient();setStatus("adminSaveStatus","A guardar…");
- const savedAt=new Date().toISOString();
- const payload={...content,updated_at:savedAt};
- // Keep the row timestamp in sync with the JSON content timestamp shown on the public page.
- const r=await c.from("team_content").upsert({id:"main",content:payload,updated_at:savedAt},{onConflict:"id"});
- if(r.error){setStatus("adminSaveStatus","Erro: "+r.error.message);return}
- content=payload;
- publicContent(payload);
- const el=document.querySelector("#avisos .section-head .muted");
- if(el)el.textContent="Atualizado: "+new Date(savedAt).toLocaleString("pt-PT");
- setStatus("adminSaveStatus","Alterações guardadas.");
+ try{
+  const c=await getClient();setStatus("adminSaveStatus","A guardar…");
+  const savedAt=new Date().toISOString();
+  const payload={...content,updated_at:savedAt};
+  // Keep the row timestamp in sync with the JSON content timestamp shown on the public page.
+  const r=await c.from("team_content").upsert({id:"main",content:payload,updated_at:savedAt},{onConflict:"id"});
+  if(r.error){setStatus("adminSaveStatus","Erro ao guardar: "+r.error.message);return false}
+  content=payload;
+  publicContent(payload);
+  const el=document.querySelector("#avisos .section-head .muted");
+  if(el)el.textContent="Atualizado: "+new Date(savedAt).toLocaleString("pt-PT");
+  setStatus("adminSaveStatus","Alterações guardadas.");
+  return true;
+ }catch(err){setStatus("adminSaveStatus","Erro ao guardar: "+(err?.message||"verifica a ligação ao Supabase."));return false}
 }
 async function loadCoachAcknowledgements(){
  const box=$("coachAckList");
@@ -1110,8 +1113,32 @@ document.addEventListener("click",async e=>{
  if(e.target.id==="adminAddNotice"){content.notices=content.notices||[];content.notices.unshift({title:$("adminNoticeTitle").value.trim(),type:$("adminNoticeType").value,text:$("adminNoticeText").value.trim()});$("adminNoticeTitle").value="";$("adminNoticeText").value="";renderAdmin()}
  if(e.target.id==="adminAddGame"){content.games=content.games||[];content.games.push({data:$("adminGameDate").value.trim(),adversario:$("adminGameOpponent").value.trim(),hora:$("adminGameTime").value.trim(),local:$("adminGamePlace").value.trim(),tipo:$("adminGameType").value,casaFora:$("adminGameHome").value,descricao:$("adminGameDescription").value.trim()});renderAdmin()}
  if(e.target.id==="adminAddTraining"){content.trainings=content.trainings||[];content.trainings.push({data:$("adminTrainingDate").value.trim(),hora:$("adminTrainingTime").value.trim(),local:$("adminTrainingPlace").value.trim(),descricao:$("adminTrainingDescription").value.trim()});renderAdmin()}
- if(e.target.id==="adminCancelTraining"){const raw=$("adminCancelTrainingDate").value.trim();if(!/^\d{2}\/\d{2}\/\d{4}$/.test(raw)){setStatus("adminSaveStatus","Indica a data no formato DD/MM/AAAA.");return}content.cancelledTrainings=content.cancelledTrainings||[];const key=raw.split("/").reverse().join("-");if(!content.cancelledTrainings.includes(key))content.cancelledTrainings.push(key);$("adminCancelTrainingDate").value="";publicContent(content);renderAdmin();setStatus("adminSaveStatus","Data marcada como cancelada. Carrega em Guardar tudo para publicar.")}
- const dc=e.target.closest("[data-del-cancelled-training]");if(dc){content.cancelledTrainings.splice(+dc.dataset.delCancelledTraining,1);publicContent(content);renderAdmin();setStatus("adminSaveStatus","Cancelamento removido. Carrega em Guardar tudo para publicar.")}
+ const cancelBtn=e.target.closest?.("#adminCancelTraining");
+ if(cancelBtn){
+   const raw=$("adminCancelTrainingDate")?.value?.trim()||"";
+   let key="";
+   if(/^\d{2}\/\d{2}\/\d{4}$/.test(raw)) key=raw.split("/").reverse().join("-");
+   else if(/^\d{4}-\d{2}-\d{2}$/.test(raw)) key=raw;
+   if(!key){setStatus("adminSaveStatus","Indica uma data válida (DD/MM/AAAA).");return;}
+   const [yy,mm,dd]=key.split("-").map(Number);const check=new Date(yy,mm-1,dd);
+   if(check.getFullYear()!==yy||check.getMonth()!==mm-1||check.getDate()!==dd){setStatus("adminSaveStatus","A data indicada não é válida.");return;}
+   content.cancelledTrainings=Array.isArray(content.cancelledTrainings)?content.cancelledTrainings:[];
+   if(!content.cancelledTrainings.includes(key))content.cancelledTrainings.push(key);
+   $("adminCancelTrainingDate").value="";
+   publicContent(content);renderAdmin();
+   // Save the cancellation immediately so it cannot be lost if Guardar tudo is forgotten.
+   const saved=await save();
+   if(saved)setStatus("adminSaveStatus","Treino de "+key.split("-").reverse().join("/")+" cancelado e guardado.");
+ }
+ const dc=e.target.closest?.("[data-del-cancelled-training]");
+ if(dc){
+   const idx=Number(dc.dataset.delCancelledTraining);
+   if(Number.isInteger(idx)&&idx>=0&&(content.cancelledTrainings||[])[idx]!==undefined){
+     content.cancelledTrainings.splice(idx,1);publicContent(content);renderAdmin();
+     const saved=await save();
+     if(saved)setStatus("adminSaveStatus","Cancelamento removido e alterações guardadas.");
+   }
+ }
  if(e.target.id==="adminSaveConvocation"){content.convocation=$("adminConvocation").value;content.convocationAthletes=$("adminConvocationAthletes").value.split(/\n/).map(x=>x.trim()).filter(Boolean);renderAdmin();renderConvocationAthletes();setStatus("coachStatus","Convocatória atualizada.")}
  if(e.target.id==="adminSaveAll")save();
  const dn=e.target.closest("[data-del-notice]");if(dn){content.notices.splice(+dn.dataset.delNotice,1);renderAdmin()}
@@ -1131,7 +1158,7 @@ $("fase3Password")?.addEventListener("keydown",e=>{if(e.key==="Enter")signIn()})
 function setupLiveUpdates(){
  try{
   const c=client; if(!c)return;
-  const channel=c.channel("team-content-live-v11");
+  const channel=c.channel("team-content-live-v13");
   channel.on("postgres_changes",{event:"*",schema:"public",table:"team_content",filter:"id=eq.main"},payload=>{
     publicContent(payload.new?.content||{});
     const el=document.querySelector("#avisos .section-head .muted");
