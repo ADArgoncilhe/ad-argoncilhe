@@ -274,7 +274,7 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
   // 🚫 LISTA DE TREINOS CANCELADOS
   // Adiciona aqui as datas dos treinos a cancelar ("DD/MM/AAAA")
   // ==================================================
-  const treinosCancelados = ["05/10/2026"
+  const treinosCancelados = [
   ];
 
   // ==================================================
@@ -1040,10 +1040,16 @@ function showCoach(){
 }
 async function save(){
  const c=await getClient();setStatus("adminSaveStatus","A guardar…");
- const payload={...content,updated_at:new Date().toISOString()};
- const r=await c.from("team_content").upsert({id:"main",content:payload},{onConflict:"id"});
+ const savedAt=new Date().toISOString();
+ const payload={...content,updated_at:savedAt};
+ // Keep the row timestamp in sync with the JSON content timestamp shown on the public page.
+ const r=await c.from("team_content").upsert({id:"main",content:payload,updated_at:savedAt},{onConflict:"id"});
  if(r.error){setStatus("adminSaveStatus","Erro: "+r.error.message);return}
- setStatus("adminSaveStatus","Alterações guardadas.");publicContent(payload);
+ content=payload;
+ publicContent(payload);
+ const el=document.querySelector("#avisos .section-head .muted");
+ if(el)el.textContent="Atualizado: "+new Date(savedAt).toLocaleString("pt-PT");
+ setStatus("adminSaveStatus","Alterações guardadas.");
 }
 async function loadCoachAcknowledgements(){
  const box=$("coachAckList");
