@@ -139,7 +139,7 @@ section h2{font-size:21px;letter-spacing:-.02em}
 </style>
 </head>
 <meta name="description" content="Página informativa da equipa AD Argoncilhe para pais e atletas.">
-<link rel="manifest" href="manifest.json?v=20260929233000">
+<link rel="manifest" href="manifest.json?v=20261004-9">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <meta name="theme-color" content="#080808">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -260,6 +260,7 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
 </div><div class="admin-card"><h3>📋 Convocatória</h3><textarea id="adminConvocation" placeholder="Texto da convocatória"></textarea><label style="display:block;margin-top:12px;font-weight:800">Atletas convocados</label><textarea id="adminConvocationAthletes" placeholder="Um atleta por linha&#10;Ex.: Francisco Oliveira&#10;Tomás Silva&#10;Rodrigo Costa" style="min-height:140px"></textarea><button class="btn" id="adminSaveConvocation" type="button">Guardar convocatória</button><div class="fase3-status" id="coachStatus"></div></div>
 <div class="admin-card"><h3>⚽ Novo jogo</h3><input id="adminGameDate" placeholder="DD/MM/AAAA"><input id="adminGameOpponent" placeholder="Adversário"><input id="adminGameTime" placeholder="11:30"><input id="adminGamePlace" placeholder="Local"><select id="adminGameType"><option>Jogo</option><option>Torneio</option><option>Campeonato</option></select><select id="adminGameHome"><option value="C">Casa</option><option value="F">Fora</option></select><input id="adminGameDescription" placeholder="Descrição"><button class="btn" id="adminAddGame" type="button">Adicionar jogo</button><div class="admin-list" id="adminGameList"></div></div>
 <div class="admin-card"><h3>🏃 Novo treino</h3><input id="adminTrainingDate" placeholder="DD/MM/AAAA"><input id="adminTrainingTime" placeholder="18:00–19:30"><input id="adminTrainingPlace" placeholder="Local"><input id="adminTrainingDescription" placeholder="Descrição"><button class="btn" id="adminAddTraining" type="button">Adicionar treino</button><div class="admin-list" id="adminTrainingList"></div></div>
+<div class="admin-card"><h3>🚫 Cancelar treino</h3><p class="muted">Indica a data do treino a cancelar. O calendário assinala-a a vermelho após guardares as alterações.</p><input id="adminCancelTrainingDate" placeholder="DD/MM/AAAA"><button class="btn" id="adminCancelTraining" type="button">Marcar como cancelado</button><div class="admin-list" id="adminCanceledTrainingList"></div></div>
 </div>
 <div class="admin-card"><h3>💾 Publicar alterações</h3><p class="muted">As alterações ficam guardadas no Supabase e passam a ser a fonte central da aplicação.</p><button class="btn" id="adminSaveAll" type="button">Guardar tudo</button><div class="fase3-status" id="adminSaveStatus"></div></div>
 </div></section>
@@ -273,7 +274,7 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
   // 🚫 LISTA DE TREINOS CANCELADOS
   // Adiciona aqui as datas dos treinos a cancelar ("DD/MM/AAAA")
   // ==================================================
-  const treinosCancelados = ["05/10/2026"
+  const treinosCancelados = [
   ];
 
   // ==================================================
@@ -491,6 +492,11 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
   
   // Formatador interno para treinos cancelados
   const canceladosKeys = treinosCancelados.map(d => d.split('/').reverse().join('-'));
+  function allCanceledKeys(){
+    const remote = Array.isArray(window.__remoteCanceledTrainings) ? window.__remoteCanceledTrainings : [];
+    const listed = (Array.isArray(window.__teamContent?.cancelledTrainings) ? window.__teamContent.cancelledTrainings : []);
+    return [...new Set([...canceladosKeys, ...remote, ...listed].map(v => String(v||'').includes('/') ? String(v).split('/').reverse().join('-') : String(v||'')))];
+  }
 
   let games = jogos.map(j => ({
     date: j.data.split('/').reverse().join('-'),
@@ -565,7 +571,7 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
       const d = new Date(year, month, day);
       if(isTrainingDay(d)){
         const dateKey = localDateKey(d);
-        const isCanceled = canceladosKeys.includes(dateKey);
+        const isCanceled = allCanceledKeys().includes(dateKey);
 
         items.push({
           date: dateKey,
@@ -583,6 +589,24 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
 
   function getCalendarItems(year, month){
     const items = getTrainingItems(year, month);
+    const remoteTrainings = Array.isArray(window.__teamContent?.trainings) ? window.__teamContent.trainings : [];
+    remoteTrainings.forEach(t => {
+      const raw = String(t.date || t.data || '');
+      const key = raw.includes('/') ? raw.split('/').reverse().join('-') : raw;
+      if(!key || !/^\d{4}-\d{2}-\d{2}$/.test(key)) return;
+      const d = parseDate(key);
+      if(d.getFullYear() !== year || d.getMonth() !== month) return;
+      const canceled = !!(t.cancelled || t.canceled || t.cancelado || t.status === 'cancelled' || t.status === 'cancelado') || allCanceledKeys().includes(key);
+      const idx = items.findIndex(x => x.date === key && x.filterType === 'treino');
+      const item = {date:key, activity:canceled ? '<span class="canceled-text">Treino (CANCELADO)</span>' : 'Treino', time:canceled ? '—' : (t.time || t.hora || '18:00–19:30'), place:t.place || t.local || 'Campo CS Argoncilhe', description:canceled ? '<span class="canceled-text">Treino Cancelado</span>' : (t.description || t.descricao || 'Treino'), filterType:'treino', isCanceled:canceled};
+      if(idx >= 0) items[idx] = item; else items.push(item);
+    });
+    allCanceledKeys().forEach(key => {
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(key)) return;
+      const d = parseDate(key);
+      if(d.getFullYear() !== year || d.getMonth() !== month) return;
+      if(!items.some(x => x.date === key && x.filterType === 'treino')) items.push({date:key,activity:'<span class="canceled-text">Treino (CANCELADO)</span>',time:'—',place:'Campo CS Argoncilhe',description:'<span class="canceled-text">Treino Cancelado</span>',filterType:'treino',isCanceled:true});
+    });
 
     games.filter(g => {
       const gd = parseDate(g.date);
@@ -645,7 +669,7 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
 
     while(d <= seasonEnd){
       const dateKey = localDateKey(d);
-      if(isTrainingDay(d) && !canceladosKeys.includes(dateKey)) return new Date(d);
+      if(isTrainingDay(d) && !allCanceledKeys().includes(dateKey)) return new Date(d);
       d.setDate(d.getDate()+1);
     }
     return null;
@@ -843,7 +867,7 @@ const players = [
      }
    }catch(e){console.warn(e)}
    const url=new URL(window.location.href);
-   url.searchParams.set('v','20261004-8-'+Date.now());
+   url.searchParams.set('v','20261004-9-'+Date.now());
    window.location.replace(url.toString());
  }
  refreshBtn?.addEventListener('click',refreshApp);
@@ -856,12 +880,12 @@ if ('serviceWorker' in navigator) {
     if(reloadedForSW)return;
     reloadedForSW=true;
     const u=new URL(location.href);
-    u.searchParams.set('sw','20261004-8');
+    u.searchParams.set('sw','20261004-9');
     location.replace(u.toString());
   });
   window.addEventListener('load', async()=>{
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=20261004-8',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=20261004-9',{updateViaCache:'none'});
       await reg.update();
       if(reg.waiting)reg.waiting.postMessage({type:'SKIP_WAITING'});
     }catch(e){console.warn('Service Worker:',e)}
@@ -900,7 +924,7 @@ async function getClient(){
 function normalizeGames(arr){
  return (Array.isArray(arr)?arr:[]).map(j=>({date:(j.date||j.data||"").includes("/")?(j.date||j.data).split("/").reverse().join("-"):(j.date||j.data||""),activity:j.activity||`${j.tipo||"Jogo"} · ${j.adversario||""}`,time:j.time||j.hora||"A confirmar",place:j.place||j.local||"",description:j.description||j.descricao||"—",adversario:j.adversario||"",casaFora:j.casaFora||"C",tipo:j.tipo||"Jogo",filterType:(j.tipo||"jogo").toLowerCase()})).filter(x=>x.date)}
 function publicContent(x){
- content=Object.assign({notices:[],games:[],trainings:[],convocation:"",convocationAthletes:[]},x||{});
+ content=Object.assign({notices:[],games:[],trainings:[],cancelledTrainings:[],convocation:"",convocationAthletes:[]},x||{}); window.__teamContent=content; window.__remoteCanceledTrainings=content.cancelledTrainings||[];
  // Preserve the built-in calendar fixtures if no online games have been configured yet.
  if(Array.isArray(content.games) && content.games.length){ games=normalizeGames(content.games); }
  try{renderGamesArea();renderNextGame();renderCalendar()}catch(e){console.error('Erro ao atualizar calendário:',e)}
@@ -1053,6 +1077,7 @@ function renderAdmin(){
  if(nl)nl.innerHTML=(content.notices||[]).map((n,i)=>`<div class="admin-row"><span>${n.title||"Aviso"}</span><button data-del-notice="${i}" type="button">Eliminar</button></div>`).join("");
  if(gl)gl.innerHTML=(content.games||[]).map((g,i)=>`<div class="admin-row"><span>${g.date||g.data} · ${g.adversario||g.opponent||"Jogo"}</span><button data-del-game="${i}" type="button">Eliminar</button></div>`).join("");
  if(tl)tl.innerHTML=(content.trainings||[]).map((t,i)=>`<div class="admin-row"><span>${t.date||t.data} · ${t.time||t.hora||""}</span><button data-del-training="${i}" type="button">Eliminar</button></div>`).join("");
+ const cl=$("adminCanceledTrainingList"); if(cl)cl.innerHTML=(content.cancelledTrainings||[]).map((d,i)=>`<div class="admin-row"><span>${d}</span><button data-del-cancelled-training="${i}" type="button">Repor</button></div>`).join("");
  if($("adminConvocation"))$("adminConvocation").value=content.convocation||"";
  if($("adminConvocationAthletes"))$("adminConvocationAthletes").value=(content.convocationAthletes||[]).join("\n");
  loadCoachAcknowledgements();
@@ -1078,6 +1103,8 @@ document.addEventListener("click",async e=>{
  if(e.target.id==="adminAddNotice"){content.notices=content.notices||[];content.notices.unshift({title:$("adminNoticeTitle").value.trim(),type:$("adminNoticeType").value,text:$("adminNoticeText").value.trim()});$("adminNoticeTitle").value="";$("adminNoticeText").value="";renderAdmin()}
  if(e.target.id==="adminAddGame"){content.games=content.games||[];content.games.push({data:$("adminGameDate").value.trim(),adversario:$("adminGameOpponent").value.trim(),hora:$("adminGameTime").value.trim(),local:$("adminGamePlace").value.trim(),tipo:$("adminGameType").value,casaFora:$("adminGameHome").value,descricao:$("adminGameDescription").value.trim()});renderAdmin()}
  if(e.target.id==="adminAddTraining"){content.trainings=content.trainings||[];content.trainings.push({data:$("adminTrainingDate").value.trim(),hora:$("adminTrainingTime").value.trim(),local:$("adminTrainingPlace").value.trim(),descricao:$("adminTrainingDescription").value.trim()});renderAdmin()}
+ if(e.target.id==="adminCancelTraining"){const raw=$("adminCancelTrainingDate").value.trim();if(!/^\d{2}\/\d{2}\/\d{4}$/.test(raw)){setStatus("adminSaveStatus","Indica a data no formato DD/MM/AAAA.");return}content.cancelledTrainings=content.cancelledTrainings||[];const key=raw.split("/").reverse().join("-");if(!content.cancelledTrainings.includes(key))content.cancelledTrainings.push(key);$("adminCancelTrainingDate").value="";publicContent(content);renderAdmin();setStatus("adminSaveStatus","Data marcada como cancelada. Carrega em Guardar tudo para publicar.")}
+ const dc=e.target.closest("[data-del-cancelled-training]");if(dc){content.cancelledTrainings.splice(+dc.dataset.delCancelledTraining,1);publicContent(content);renderAdmin();setStatus("adminSaveStatus","Cancelamento removido. Carrega em Guardar tudo para publicar.")}
  if(e.target.id==="adminSaveConvocation"){content.convocation=$("adminConvocation").value;content.convocationAthletes=$("adminConvocationAthletes").value.split(/\n/).map(x=>x.trim()).filter(Boolean);renderAdmin();renderConvocationAthletes();setStatus("coachStatus","Convocatória atualizada.")}
  if(e.target.id==="adminSaveAll")save();
  const dn=e.target.closest("[data-del-notice]");if(dn){content.notices.splice(+dn.dataset.delNotice,1);renderAdmin()}
@@ -1097,8 +1124,8 @@ $("fase3Password")?.addEventListener("keydown",e=>{if(e.key==="Enter")signIn()})
 function setupLiveUpdates(){
  try{
   const c=client; if(!c)return;
-  const channel=c.channel("team-content-live-v7");
-  channel.on("postgres_changes",{event:"UPDATE",schema:"public",table:"team_content",filter:"id=eq.main"},payload=>{
+  const channel=c.channel("team-content-live-v9");
+  channel.on("postgres_changes",{event:"*",schema:"public",table:"team_content",filter:"id=eq.main"},payload=>{
     publicContent(payload.new?.content||{});
     const el=document.querySelector("#avisos .section-head .muted");
     if(el)el.textContent="Atualizado agora";
@@ -1106,7 +1133,7 @@ function setupLiveUpdates(){
     if("Notification" in window && Notification.permission==="granted" && document.visibilityState!=="visible") new Notification("AD Argoncilhe Sub-10",{body:"A aplicação foi atualizada."});
   }).subscribe(status=>{console.log("Supabase realtime:",status)});
   // Fallback: even if Realtime is not enabled on the table, refresh the content periodically.
-  setInterval(()=>{if(document.visibilityState!=="hidden")loadContent()},30000);
+  setInterval(()=>{loadContent()},20000);
  }catch(e){console.warn("Realtime:",e);setInterval(loadContent,30000)}
 }
 async function enableNotifications(){
