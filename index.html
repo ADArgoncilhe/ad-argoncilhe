@@ -993,8 +993,11 @@ async function acknowledgeAthlete(name,button){
     .update({acknowledged:false,updated_at:new Date().toISOString(),user_email})
     .eq("event_id",event_id)
     .eq("user_id",user_id)
-    .eq("athlete",name);
+    .eq("athlete",name)
+    .select("acknowledged")
+    .maybeSingle();
    if(r.error)throw r.error;
+   if(!r.data || r.data.acknowledged!==false) throw new Error("O Supabase não confirmou a retirada da confirmação.");
    button.classList.remove("active");
    button.textContent="☐ Tomei conhecimento";
    button.setAttribute("aria-pressed","false");
