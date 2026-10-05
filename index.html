@@ -947,7 +947,13 @@ async function loadAcknowledgements(){
   const c=await getClient(),r=await c.from("team_convocation_ack").select("athlete,acknowledged").eq("event_id",convocationEventId()).eq("user_id",currentUser.id);
   if(r.error)throw r.error;
   const map={};(r.data||[]).forEach(x=>map[x.athlete]=!!x.acknowledged);
-  box.querySelectorAll("[data-athlete]").forEach(b=>b.classList.toggle("active",!!map[b.dataset.athlete]));
+  box.querySelectorAll("[data-athlete]").forEach(b=>{
+    const active=!!map[b.dataset.athlete];
+    b.classList.toggle("active",active);
+    b.textContent=active?"✓ Tomei conhecimento · Desfazer":"☐ Tomei conhecimento";
+    b.setAttribute("aria-pressed",active?"true":"false");
+    b.title=active?"Clique para retirar a confirmação":"Clique para confirmar que tomou conhecimento";
+  });
  }catch(e){
   console.error("Leitura das confirmações:",e);
   setStatus("ackStatus","Não foi possível carregar as confirmações: "+(e?.message||e));
@@ -958,7 +964,7 @@ function renderConvocationAthletes(){
  const arr=Array.isArray(content.convocationAthletes)?content.convocationAthletes.filter(Boolean):[];
  if(!arr.length){box.innerHTML=currentUser?'<div class="muted">O treinador ainda não indicou os atletas convocados.</div>':'';return}
  if(!currentUser){box.innerHTML='<div class="notice-login-hint">Entre na Área dos Pais para indicar que tomou conhecimento da convocatória.</div>';return}
- box.innerHTML=arr.map(name=>`<div class="convocation-athlete"><span class="athlete-name">${name}</span><button type="button" class="ack-btn" data-athlete="${String(name).replace(/"/g,'&quot;')}">☐ Tomei conhecimento</button></div>`).join('');
+ box.innerHTML=arr.map(name=>`<div class="convocation-athlete"><span class="athlete-name">${name}</span><button type="button" class="ack-btn" data-athlete="${String(name).replace(/"/g,'&quot;')}" aria-pressed="false" title="Clique para confirmar que tomou conhecimento">☐ Tomei conhecimento</button></div>`).join('');
  loadAcknowledgements();
 }
 async function acknowledgeAthlete(name,button){
@@ -971,11 +977,8 @@ async function acknowledgeAthlete(name,button){
   const event_id=convocationEventId();
   const user_id=currentUser.id;
   const user_email=currentUser.email||"";
-  const payload={event_id,user_id,user_email,athlete:name,acknowledged:true,updated_at:new Date().toISOString()};
-
-  // Evitar ambiguidades do upsert com chave composta: primeiro verificamos se já existe.
   const existing=await c.from("team_convocation_ack")
-    .select("event_id")
+    .select("event_id,acknowledged")
     .eq("event_id",event_id)
     .eq("user_id",user_id)
     .eq("athlete",name)
@@ -983,19 +986,38 @@ async function acknowledgeAthlete(name,button){
   if(existing.error)throw existing.error;
 
   let r;
-  if(existing.data){
+  if(existing.data?.acknowledged){
+    // Segundo clique: retirar a confirmação. Eliminamos o registo para que
+    // a lista do treinador mostre apenas confirmações atualmente ativas.
     r=await c.from("team_convocation_ack")
-      .update({user_email,acknowledged:true,updated_at:payload.updated_at})
+      .delete()
       .eq("event_id",event_id)
       .eq("user_id",user_id)
       .eq("athlete",name);
+    if(r.error)throw r.error;
+    button.classList.remove("active");
+    button.textContent="☐ Tomei conhecimento";
+    button.setAttribute("aria-pressed","false");
+    button.title="Clique para confirmar que tomou conhecimento";
+    setStatus("ackStatus","Confirmação retirada para "+name+".");
   }else{
-    r=await c.from("team_convocation_ack").insert(payload);
+    const payload={event_id,user_id,user_email,athlete:name,acknowledged:true,updated_at:new Date().toISOString()};
+    if(existing.data){
+      r=await c.from("team_convocation_ack")
+        .update({user_email,acknowledged:true,updated_at:payload.updated_at})
+        .eq("event_id",event_id)
+        .eq("user_id",user_id)
+        .eq("athlete",name);
+    }else{
+      r=await c.from("team_convocation_ack").insert(payload);
+    }
+    if(r.error)throw r.error;
+    button.classList.add("active");
+    button.textContent="✓ Tomei conhecimento · Desfazer";
+    button.setAttribute("aria-pressed","true");
+    button.title="Clique para retirar a confirmação";
+    setStatus("ackStatus","✓ Conhecimento registado para "+name+".");
   }
-  if(r.error)throw r.error;
-
-  button.classList.add("active");button.textContent="✓ Tomei conhecimento";
-  setStatus("ackStatus","✓ Conhecimento registado para "+name+".");
   if((currentUser?.app_metadata?.role||"parent")==="coach")loadCoachAcknowledgements();
  }catch(e){
   console.error("Confirmação convocatória:",e);
