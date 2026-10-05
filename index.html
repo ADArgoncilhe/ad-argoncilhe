@@ -948,11 +948,11 @@ async function loadAcknowledgements(){
   if(r.error)throw r.error;
   const map={};(r.data||[]).forEach(x=>map[x.athlete]=!!x.acknowledged);
   box.querySelectorAll("[data-athlete]").forEach(b=>{
-    const active=!!map[b.dataset.athlete];
-    b.classList.toggle("active",active);
-    b.textContent=active?"✓ Tomei conhecimento · Desfazer":"☐ Tomei conhecimento";
-    b.setAttribute("aria-pressed",active?"true":"false");
-    b.title=active?"Clique para retirar a confirmação":"Clique para confirmar que tomou conhecimento";
+   const active=!!map[b.dataset.athlete];
+   b.classList.toggle("active",active);
+   b.textContent=active?"✓ Tomei conhecimento · Desfazer":"☐ Tomei conhecimento";
+   b.setAttribute("aria-pressed",active?"true":"false");
+   b.title=active?"Clique para retirar a confirmação":"Clique para confirmar que tomou conhecimento";
   });
  }catch(e){
   console.error("Leitura das confirmações:",e);
@@ -970,6 +970,7 @@ function renderConvocationAthletes(){
 async function acknowledgeAthlete(name,button){
  if(!currentUser){openLogin();return}
  if(!name||!button)return;
+ const wasActive=button.classList.contains("active");
  const oldText=button.textContent;
  button.disabled=true;button.textContent="A guardar…";setStatus("ackStatus","");
  try{
@@ -978,52 +979,52 @@ async function acknowledgeAthlete(name,button){
   const user_id=currentUser.id;
   const user_email=currentUser.email||"";
   const existing=await c.from("team_convocation_ack")
-    .select("event_id,acknowledged")
-    .eq("event_id",event_id)
-    .eq("user_id",user_id)
-    .eq("athlete",name)
-    .maybeSingle();
+   .select("event_id,acknowledged")
+   .eq("event_id",event_id)
+   .eq("user_id",user_id)
+   .eq("athlete",name)
+   .maybeSingle();
   if(existing.error)throw existing.error;
 
   let r;
-  if(existing.data?.acknowledged){
-    // Segundo clique: retirar a confirmação. Eliminamos o registo para que
-    // a lista do treinador mostre apenas confirmações atualmente ativas.
-    r=await c.from("team_convocation_ack")
-      .delete()
-      .eq("event_id",event_id)
-      .eq("user_id",user_id)
-      .eq("athlete",name);
-    if(r.error)throw r.error;
-    button.classList.remove("active");
-    button.textContent="☐ Tomei conhecimento";
-    button.setAttribute("aria-pressed","false");
-    button.title="Clique para confirmar que tomou conhecimento";
-    setStatus("ackStatus","Confirmação retirada para "+name+".");
+  if(existing.data?.acknowledged || wasActive){
+   // Não usamos DELETE: a política RLS atual permite UPDATE ao pai, mas não DELETE.
+   r=await c.from("team_convocation_ack")
+    .update({acknowledged:false,updated_at:new Date().toISOString(),user_email})
+    .eq("event_id",event_id)
+    .eq("user_id",user_id)
+    .eq("athlete",name);
+   if(r.error)throw r.error;
+   button.classList.remove("active");
+   button.textContent="☐ Tomei conhecimento";
+   button.setAttribute("aria-pressed","false");
+   button.title="Clique para confirmar que tomou conhecimento";
+   setStatus("ackStatus","Confirmação retirada para "+name+".");
   }else{
-    const payload={event_id,user_id,user_email,athlete:name,acknowledged:true,updated_at:new Date().toISOString()};
-    if(existing.data){
-      r=await c.from("team_convocation_ack")
-        .update({user_email,acknowledged:true,updated_at:payload.updated_at})
-        .eq("event_id",event_id)
-        .eq("user_id",user_id)
-        .eq("athlete",name);
-    }else{
-      r=await c.from("team_convocation_ack").insert(payload);
-    }
-    if(r.error)throw r.error;
-    button.classList.add("active");
-    button.textContent="✓ Tomei conhecimento · Desfazer";
-    button.setAttribute("aria-pressed","true");
-    button.title="Clique para retirar a confirmação";
-    setStatus("ackStatus","✓ Conhecimento registado para "+name+".");
+   const payload={event_id,user_id,user_email,athlete:name,acknowledged:true,updated_at:new Date().toISOString()};
+   if(existing.data){
+    r=await c.from("team_convocation_ack")
+     .update({user_email,acknowledged:true,updated_at:payload.updated_at})
+     .eq("event_id",event_id)
+     .eq("user_id",user_id)
+     .eq("athlete",name);
+   }else{
+    r=await c.from("team_convocation_ack").insert(payload);
+   }
+   if(r.error)throw r.error;
+   button.classList.add("active");
+   button.textContent="✓ Tomei conhecimento · Desfazer";
+   button.setAttribute("aria-pressed","true");
+   button.title="Clique para retirar a confirmação";
+   setStatus("ackStatus","✓ Conhecimento registado para "+name+".");
   }
   if((currentUser?.app_metadata?.role||"parent")==="coach")loadCoachAcknowledgements();
  }catch(e){
   console.error("Confirmação convocatória:",e);
   button.disabled=false;button.textContent=oldText;
-  setStatus("ackStatus","Não foi possível registar: "+(e?.message||e));
- }finally{if(button.classList.contains("active"))button.disabled=false;}
+  if(wasActive)button.classList.add("active");
+  setStatus("ackStatus","Não foi possível alterar a confirmação: "+(e?.message||e));
+ }finally{button.disabled=false;}
 }
 
 async function loadContent(){
@@ -1206,7 +1207,7 @@ $("fase3Password")?.addEventListener("keydown",e=>{if(e.key==="Enter")signIn()})
 function setupLiveUpdates(){
  try{
   const c=client; if(!c)return;
-  const channel=c.channel("team-content-live-v15");
+  const channel=c.channel("team-content-live-v13");
   channel.on("postgres_changes",{event:"*",schema:"public",table:"team_content",filter:"id=eq.main"},payload=>{
     publicContent(payload.new?.content||{});
     const el=document.querySelector("#avisos .section-head .muted");
