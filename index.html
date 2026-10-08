@@ -888,7 +888,7 @@ if ('serviceWorker' in navigator) {
   });
   window.addEventListener('load', async()=>{
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=20261004-13',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=20261008-push-2',{updateViaCache:'none'});
       await reg.update();
       if(reg.waiting)reg.waiting.postMessage({type:'SKIP_WAITING'});
     }catch(e){console.warn('Service Worker:',e)}
@@ -1197,8 +1197,8 @@ document.addEventListener("click",async e=>{
   $("gestao-equipa")?.classList.remove("show");renderConvocationAthletes();
 }
  const athleteBtn=e.target.closest?.("[data-athlete]"); if(athleteBtn)acknowledgeAthlete(athleteBtn.dataset.athlete,athleteBtn);
- if(e.target.id==="enableNotifications")enableNotifications();
-if(e.target.id==="disableNotifications")disableNotifications();
+ if(e.target.id==="enableNotifications") { e.preventDefault(); enableNotifications(); }
+if(e.target.id==="disableNotifications") { e.preventDefault(); disableNotifications(); }
  if(e.target.id==="adminAddNotice"){content.notices=content.notices||[];content.notices.unshift({title:$("adminNoticeTitle").value.trim(),type:$("adminNoticeType").value,text:$("adminNoticeText").value.trim()});$("adminNoticeTitle").value="";$("adminNoticeText").value="";renderAdmin()}
  if(e.target.id==="adminAddGame"){content.games=content.games||[];content.games.push({data:$("adminGameDate").value.trim(),adversario:$("adminGameOpponent").value.trim(),hora:$("adminGameTime").value.trim(),local:$("adminGamePlace").value.trim(),tipo:$("adminGameType").value,casaFora:$("adminGameHome").value,descricao:$("adminGameDescription").value.trim()});renderAdmin()}
  if(e.target.id==="adminAddTraining"){content.trainings=content.trainings||[];content.trainings.push({data:$("adminTrainingDate").value.trim(),hora:$("adminTrainingTime").value.trim(),local:$("adminTrainingPlace").value.trim(),descricao:$("adminTrainingDescription").value.trim()});renderAdmin()}
@@ -1321,6 +1321,21 @@ async function refreshNotificationButton(){
   if(active)setStatus("notificationStatus","✓ Notificações ativadas neste dispositivo.");
  }catch(e){console.warn("Estado das notificações:",e)}
 }
+
+// Listener direto: evita depender apenas do delegado global de cliques.
+function bindNotificationButtons(){
+ const enable=$("enableNotifications");
+ const disable=$("disableNotifications");
+ if(enable && !enable.dataset.bound){
+   enable.dataset.bound="1";
+   enable.addEventListener("click",()=>{ enableNotifications(); });
+ }
+ if(disable && !disable.dataset.bound){
+   disable.dataset.bound="1";
+   disable.addEventListener("click",()=>{ disableNotifications(); });
+ }
+}
+bindNotificationButtons();
 
 
 })();
