@@ -1141,6 +1141,19 @@ async function sendPushForContentChange(oldC,newC){
  const r=await fetch(window.PUSH_FUNCTION_URL,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify(msg)});
  const data=await r.json().catch(()=>({}));
  if(!r.ok)throw new Error(data.error||("HTTP "+r.status));
+ return data;
+}
+
+async function sendTestPush(){
+ try{
+  const btn=$("testPushButton"); if(btn)btn.disabled=true;
+  setStatus("pushTestStatus","A enviar notificação de teste…");
+  const data=await sendPushForContentChange({notices:[],games:[],trainings:[],cancelledTrainings:[],convocation:""},{notices:[{id:"push-test"}],games:[],trainings:[],cancelledTrainings:[],convocation:""});
+  setStatus("pushTestStatus",`✓ Servidor: ${data.sent||0} enviada(s), ${data.removed||0} removida(s).${data.errors?.length?" Erros: "+data.errors.join(" | "):""}`);
+ }catch(e){
+  console.error("Teste Push:",e);
+  setStatus("pushTestStatus","✕ Falha no envio: "+(e?.message||e));
+ }finally{ const btn=$("testPushButton"); if(btn)btn.disabled=false; }
 }
 
 async function loadCoachAcknowledgements(){
@@ -1336,7 +1349,10 @@ function bindNotificationButtons(){
  }
 }
 bindNotificationButtons();
-
+if((currentUser?.app_metadata?.role||"parent")==="coach") {
+ const testBtn=$("testPushButton");
+ if(testBtn){ testBtn.style.display=""; testBtn.addEventListener("click",sendTestPush); }
+}
 
 })();
 })();

@@ -1,4 +1,4 @@
-const BUILD_ID = "20261008-push-2";
+const BUILD_ID = "20261008-push-3";
 const CACHE_NAME = `ad-argoncilhe-sub10-${BUILD_ID}`;
 const APP_SHELL = ["./", "./index.html", "./manifest.json"];
 const OPTIONAL_ASSETS = ["./icons/icon-180.png", "./icons/icon-192.png", "./icons/icon-512.png"];
