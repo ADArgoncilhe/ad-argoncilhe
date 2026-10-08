@@ -202,6 +202,8 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
   // Supabase — Publishable Key (segura para uso no navegador; protegida por RLS)
   window.SUPABASE_URL = "https://leheuqzeutgkwuqmqcjp.supabase.co";
   window.SUPABASE_KEY = "sb_publishable_SU5jD6dT-_ze1r4AFTJN4g_rcWWNhdv";
+  window.VAPID_PUBLIC_KEY = "BHilHd9ij031kZez9Kya5LLpafpEWOlU3JeM6f4_XUxUIxSZKGPRGm93WyylPzn51DFHjPhZqcN506plOa9_IQI";
+  window.PUSH_FUNCTION_URL = window.SUPABASE_URL + "/functions/v1/send-push";
 </script>
 </head>
 <body>
@@ -217,7 +219,7 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
   <span>✓ Sessão iniciada</span>
   <button type="button" id="parentLogout">Sair</button>
 </div>
-<div class="ack-status" id="ackStatus"></div><div class="push-card"><strong>🔔 Notificações</strong><div class="muted">Receba um aviso neste dispositivo quando a aplicação for atualizada enquanto estiver aberta.</div><button type="button" class="private-btn" id="enableNotifications">Ativar notificações</button><div class="ack-status" id="notificationStatus"></div></div></div></div></div></section>
+<div class="ack-status" id="ackStatus"></div><div class="push-card"><strong>🔔 Notificações</strong><div class="muted">Receba notificações da equipa neste dispositivo, mesmo quando a aplicação estiver fechada.</div><button type="button" class="private-btn" id="enableNotifications">Ativar notificações</button><button type="button" class="private-btn" id="disableNotifications" style="display:none">Desativar neste dispositivo</button><div class="ack-status" id="notificationStatus"></div></div></div></div></div></section>
 <section id="calendario" class="private-section"><div class="wrap">
 <div class="section-head">
   <div><h2>🗓️ Calendário</h2><span class="muted" id="calendarPeriod">25 de agosto de 2026 a 30 de junho de 2027</span></div>
@@ -1075,6 +1077,7 @@ async function signIn(){
   else setStatus("ackStatus","Sessão iniciada com sucesso.");
   window.renderNotices(content.notices||[],true);
   renderConvocationAthletes();
+  refreshNotificationButton();
  }catch(e){
   console.error("Login Supabase:",e);
   currentUser=null;hideParentSession();
@@ -1094,9 +1097,9 @@ function showCoach(){
 async function save(){
  try{
   const c=await getClient();setStatus("adminSaveStatus","A guardar…");
+  const previousContent=JSON.parse(JSON.stringify(content||{}));
   const savedAt=new Date().toISOString();
   const payload={...content,updated_at:savedAt};
-  // Keep the row timestamp in sync with the JSON content timestamp shown on the public page.
   const r=await c.from("team_content").upsert({id:"main",content:payload,updated_at:savedAt},{onConflict:"id"});
   if(r.error){setStatus("adminSaveStatus","Erro ao guardar: "+r.error.message);return false}
   content=payload;
@@ -1104,9 +1107,42 @@ async function save(){
   const el=document.querySelector("#avisos .section-head .muted");
   if(el)el.textContent="Atualizado: "+new Date(savedAt).toLocaleString("pt-PT");
   setStatus("adminSaveStatus","Alterações guardadas.");
+  // O envio é feito no servidor (Edge Function), nunca com uma chave secreta no navegador.
+  try{
+    await sendPushForContentChange(previousContent,payload);
+  }catch(pushErr){
+    console.warn("Push após publicação:",pushErr);
+    setStatus("adminSaveStatus","Alterações guardadas. Notificações: "+(pushErr?.message||"não enviadas"));
+  }
   return true;
  }catch(err){setStatus("adminSaveStatus","Erro ao guardar: "+(err?.message||"verifica a ligação ao Supabase."));return false}
 }
+
+function getContentChangeNotification(oldC,newC){
+ const oldNotices=JSON.stringify(oldC?.notices||[]), newNotices=JSON.stringify(newC?.notices||[]);
+ const oldConv=JSON.stringify({text:oldC?.convocation||"",athletes:oldC?.convocationAthletes||[]}), newConv=JSON.stringify({text:newC?.convocation||"",athletes:newC?.convocationAthletes||[]});
+ const oldGames=JSON.stringify(oldC?.games||[]), newGames=JSON.stringify(newC?.games||[]);
+ const oldTrain=JSON.stringify(oldC?.trainings||[]), newTrain=JSON.stringify(newC?.trainings||[]);
+ const oldCancel=JSON.stringify(oldC?.cancelledTrainings||[]), newCancel=JSON.stringify(newC?.cancelledTrainings||[]);
+ if(oldConv!==newConv)return {title:"📋 Nova convocatória",body:"Foi publicada ou alterada uma convocatória. Abra a aplicação para consultar."};
+ if(oldCancel!==newCancel)return {title:"🚨 Treino atualizado",body:"Foi publicada uma alteração aos treinos. Consulte a aplicação."};
+ if(oldNotices!==newNotices)return {title:"📢 Novo aviso",body:"Foi publicado ou alterado um aviso da equipa."};
+ if(oldGames!==newGames)return {title:"⚽ Jogos atualizados",body:"O calendário de jogos foi atualizado."};
+ if(oldTrain!==newTrain)return {title:"🏃 Treinos atualizados",body:"O calendário de treinos foi atualizado."};
+ return {title:"AD Argoncilhe Sub-10",body:"A aplicação da equipa foi atualizada."};
+}
+
+async function sendPushForContentChange(oldC,newC){
+ if(!currentUser || (currentUser.app_metadata?.role||"parent")!=="coach")return;
+ const session=(await getClient()).auth.getSession ? await (await getClient()).auth.getSession() : null;
+ const token=session?.data?.session?.access_token;
+ if(!token)throw new Error("Sessão do treinador não encontrada.");
+ const msg=getContentChangeNotification(oldC,newC);
+ const r=await fetch(window.PUSH_FUNCTION_URL,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify(msg)});
+ const data=await r.json().catch(()=>({}));
+ if(!r.ok)throw new Error(data.error||("HTTP "+r.status));
+}
+
 async function loadCoachAcknowledgements(){
  const box=$("coachAckList");
  if(!box)return;
@@ -1162,6 +1198,7 @@ document.addEventListener("click",async e=>{
 }
  const athleteBtn=e.target.closest?.("[data-athlete]"); if(athleteBtn)acknowledgeAthlete(athleteBtn.dataset.athlete,athleteBtn);
  if(e.target.id==="enableNotifications")enableNotifications();
+if(e.target.id==="disableNotifications")disableNotifications();
  if(e.target.id==="adminAddNotice"){content.notices=content.notices||[];content.notices.unshift({title:$("adminNoticeTitle").value.trim(),type:$("adminNoticeType").value,text:$("adminNoticeText").value.trim()});$("adminNoticeTitle").value="";$("adminNoticeText").value="";renderAdmin()}
  if(e.target.id==="adminAddGame"){content.games=content.games||[];content.games.push({data:$("adminGameDate").value.trim(),adversario:$("adminGameOpponent").value.trim(),hora:$("adminGameTime").value.trim(),local:$("adminGamePlace").value.trim(),tipo:$("adminGameType").value,casaFora:$("adminGameHome").value,descricao:$("adminGameDescription").value.trim()});renderAdmin()}
  if(e.target.id==="adminAddTraining"){content.trainings=content.trainings||[];content.trainings.push({data:$("adminTrainingDate").value.trim(),hora:$("adminTrainingTime").value.trim(),local:$("adminTrainingPlace").value.trim(),descricao:$("adminTrainingDescription").value.trim()});renderAdmin()}
@@ -1206,6 +1243,7 @@ $("fase3Password")?.addEventListener("keydown",e=>{if(e.key==="Enter")signIn()})
   document.querySelectorAll(".private-guard").forEach(x=>x.classList.add("hidden"));
   document.querySelectorAll(".private-hidden-content").forEach(x=>x.classList.remove("private-hidden-content"));
   if(role==="coach")showCoach();else renderConvocationAthletes();
+  refreshNotificationButton();
 }else{renderConvocationAthletes()}}catch(e){console.warn('Sessão:',e)} await loadContent(); setupLiveUpdates(); if(currentUser){window.renderNotices(content.notices||[],true);renderConvocationAthletes();}
 function setupLiveUpdates(){
  try{
@@ -1216,27 +1254,74 @@ function setupLiveUpdates(){
     const el=document.querySelector("#avisos .section-head .muted");
     if(el)el.textContent="Atualizado agora";
     if(currentUser?.app_metadata?.role==="coach")loadCoachAcknowledgements();
-    if("Notification" in window && Notification.permission==="granted" && document.visibilityState!=="visible") new Notification("AD Argoncilhe Sub-10",{body:"A aplicação foi atualizada."});
   }).subscribe(status=>{console.log("Supabase realtime:",status)});
   // Fallback: even if Realtime is not enabled on the table, refresh the content periodically.
   setInterval(()=>{loadContent()},20000);
  }catch(e){console.warn("Realtime:",e);setInterval(loadContent,30000)}
 }
+function urlBase64ToUint8Array(base64String){
+ const padding="=".repeat((4-base64String.length%4)%4);
+ const base64=(base64String+padding).replace(/-/g,"+").replace(/_/g,"/");
+ const raw=atob(base64);
+ return Uint8Array.from([...raw].map(ch=>ch.charCodeAt(0)));
+}
 async function enableNotifications(){
- if(!('Notification' in window)){setStatus("notificationStatus","Este navegador não suporta notificações.");return}
- if(!window.isSecureContext){setStatus("notificationStatus","As notificações exigem HTTPS.");return}
+ if(!currentUser){openLogin();return}
+ if(!('Notification' in window)||!('PushManager' in window)){setStatus("notificationStatus","Este dispositivo/navegador não suporta notificações push.");return}
+ if(!window.isSecureContext){setStatus("notificationStatus","As notificações push exigem HTTPS.");return}
+ if(!('serviceWorker' in navigator)){setStatus("notificationStatus","O navegador não suporta Service Worker.");return}
  try{
   let p=Notification.permission;
+  if(p==="denied"){setStatus("notificationStatus","As notificações estão bloqueadas. Permita-as nas definições do navegador.");return}
   if(p==="default")p=await Notification.requestPermission();
-  if(p!=="granted"){setStatus("notificationStatus","Permissão atual: "+p+". Se estiver bloqueada, permita notificações nas definições do navegador.");return}
-  if('serviceWorker' in navigator){
-    const reg=await navigator.serviceWorker.ready.catch(()=>null);
-    if(reg?.showNotification)await reg.showNotification("AD Argoncilhe Sub-10",{body:"Notificações ativadas neste dispositivo."});
-    else new Notification("AD Argoncilhe Sub-10",{body:"Notificações ativadas neste dispositivo."});
-  }else new Notification("AD Argoncilhe Sub-10",{body:"Notificações ativadas neste dispositivo."});
-  setStatus("notificationStatus","✓ Notificações ativadas neste dispositivo.");
- }catch(e){console.error("Notificações:",e);setStatus("notificationStatus","Erro nas notificações: "+(e?.message||e))}
+  if(p!=="granted"){setStatus("notificationStatus","Permissão de notificações: "+p);return}
+  const reg=await navigator.serviceWorker.ready;
+  let sub=await reg.pushManager.getSubscription();
+  if(!sub){
+    if(!window.VAPID_PUBLIC_KEY)throw new Error("Chave pública VAPID não configurada.");
+    sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(window.VAPID_PUBLIC_KEY)});
+  }
+  const c=await getClient();
+  const s=await c.auth.getSession();
+  const token=s.data?.session?.access_token;
+  if(!token)throw new Error("Sessão não encontrada. Volte a entrar na Área dos Pais.");
+  const json=sub.toJSON();
+  const payload={endpoint:sub.endpoint,p256dh:json.keys?.p256dh,auth:json.keys?.auth,user_agent:navigator.userAgent};
+  if(!payload.p256dh||!payload.auth)throw new Error("O navegador não devolveu os dados da subscrição push.");
+  const r=await c.from("team_push_subscriptions").upsert({user_id:currentUser.id,user_email:currentUser.email||"",endpoint:payload.endpoint,p256dh:payload.p256dh,auth:payload.auth,user_agent:payload.user_agent,updated_at:new Date().toISOString()},{onConflict:"user_id,endpoint"});
+  if(r.error)throw r.error;
+  $("enableNotifications")?.style.setProperty("display","none");
+  $("disableNotifications")?.style.setProperty("display","");
+  setStatus("notificationStatus","✓ Notificações push ativadas neste dispositivo.");
+ }catch(e){console.error("Notificações push:",e);setStatus("notificationStatus","Não foi possível ativar: "+(e?.message||e))}
 }
+async function disableNotifications(){
+ try{
+  const reg=await navigator.serviceWorker.ready;
+  const sub=await reg.pushManager.getSubscription();
+  if(sub){
+    const c=await getClient();
+    const r=await c.from("team_push_subscriptions").delete().eq("user_id",currentUser.id).eq("endpoint",sub.endpoint);
+    if(r.error)throw r.error;
+    await sub.unsubscribe();
+  }
+  $("enableNotifications")?.style.setProperty("display","");
+  $("disableNotifications")?.style.setProperty("display","none");
+  setStatus("notificationStatus","Notificações desativadas neste dispositivo.");
+ }catch(e){console.error("Desativar notificações:",e);setStatus("notificationStatus","Não foi possível desativar: "+(e?.message||e))}
+}
+async function refreshNotificationButton(){
+ if(!currentUser)return;
+ try{
+  const reg=await navigator.serviceWorker.ready;
+  const sub=await reg.pushManager.getSubscription();
+  const active=!!sub;
+  $("enableNotifications")?.style.setProperty("display",active?"none":"");
+  $("disableNotifications")?.style.setProperty("display",active?"":"none");
+  if(active)setStatus("notificationStatus","✓ Notificações ativadas neste dispositivo.");
+ }catch(e){console.warn("Estado das notificações:",e)}
+}
+
 
 })();
 })();
