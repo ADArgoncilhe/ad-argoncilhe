@@ -888,7 +888,7 @@ if ('serviceWorker' in navigator) {
   });
   window.addEventListener('load', async()=>{
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=20261008-push-2',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=20261010-push-v26',{updateViaCache:'none'});
       await reg.update();
       if(reg.waiting)reg.waiting.postMessage({type:'SKIP_WAITING'});
     }catch(e){console.warn('Service Worker:',e)}
@@ -1100,7 +1100,10 @@ function showCoach(){
 async function save(){
  try{
   const c=await getClient();setStatus("adminSaveStatus","A guardar…");
-  const previousContent=JSON.parse(JSON.stringify(lastPublishedContent ?? content ?? {}));
+  // Ler a versão persistida antes de gravar para comparar com o estado real.
+  const before=await c.from("team_content").select("content").eq("id","main").maybeSingle();
+  if(before.error)throw before.error;
+  const previousContent=JSON.parse(JSON.stringify(before.data?.content ?? lastPublishedContent ?? {}));
   const savedAt=new Date().toISOString();
   const payload={...content,updated_at:savedAt};
   const r=await c.from("team_content").upsert({id:"main",content:payload,updated_at:savedAt},{onConflict:"id"});
@@ -1110,17 +1113,21 @@ async function save(){
   publicContent(payload);
   const el=document.querySelector("#avisos .section-head .muted");
   if(el)el.textContent="Atualizado: "+new Date(savedAt).toLocaleString("pt-PT");
-  setStatus("adminSaveStatus","Alterações guardadas.");
-  // O envio é feito no servidor (Edge Function), nunca com uma chave secreta no navegador.
+  // Mostrar sempre o diagnóstico de Push, mesmo quando não há alterações.
+  setStatus("adminSaveStatus","Alterações guardadas. A verificar notificações…");
   try{
-    if(hasNotifiableChanges(previousContent,payload)){
+    if(!hasNotifiableChanges(previousContent,payload)){
+      setStatus("adminSaveStatus","Alterações guardadas. Sem alterações novas para notificar.");
+    }else{
       const result=await sendPushForContentChange(previousContent,payload);
-      if(result && result.ok===false)throw new Error(result.error||"Falha no envio Push");
-      if(result)setStatus("adminSaveStatus",`Alterações guardadas. Notificações enviadas: ${result.sent??0}.`);
+      if(!result)throw new Error("O envio não devolveu resultado. Confirme que iniciou sessão como treinador.");
+      if(result.ok===false)throw new Error(result.error||"Falha no envio Push");
+      const errors=Array.isArray(result.errors)&&result.errors.length?" Erros: "+result.errors.join(" | "):"";
+      setStatus("adminSaveStatus",`Alterações guardadas. Notificações enviadas: ${result.sent??0}; subscrições inválidas removidas: ${result.removed??0}.${errors}`);
     }
   }catch(pushErr){
     console.warn("Push após publicação:",pushErr);
-    setStatus("adminSaveStatus","Alterações guardadas. Notificações: "+(pushErr?.message||"não enviadas"));
+    setStatus("adminSaveStatus","Alterações guardadas, mas falhou o envio de notificações: "+(pushErr?.message||"erro desconhecido"));
   }
   return true;
  }catch(err){setStatus("adminSaveStatus","Erro ao guardar: "+(err?.message||"verifica a ligação ao Supabase."));return false}
@@ -1146,7 +1153,7 @@ function getContentChangeNotification(oldC,newC){
 }
 
 async function sendPushForContentChange(oldC,newC){
- if(!currentUser || (currentUser.app_metadata?.role||"parent")!=="coach")return;
+ if(!currentUser || (currentUser.app_metadata?.role||"parent")!=="coach")throw new Error("A sessão atual não tem permissões de treinador para enviar notificações.");
  const session=(await getClient()).auth.getSession ? await (await getClient()).auth.getSession() : null;
  const token=session?.data?.session?.access_token;
  if(!token)throw new Error("Sessão do treinador não encontrada.");
