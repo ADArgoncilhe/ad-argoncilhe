@@ -219,7 +219,7 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
   <span>✓ Sessão iniciada</span>
   <button type="button" id="parentLogout">Sair</button>
 </div>
-<div class="ack-status" id="ackStatus"></div><div class="push-card"><strong>🔔 Notificações</strong><div class="muted">Receba notificações da equipa neste dispositivo, mesmo quando a aplicação estiver fechada.</div><button type="button" class="private-btn" id="enableNotifications">Ativar notificações</button><button type="button" class="private-btn" id="disableNotifications" style="display:none">Desativar neste dispositivo</button><button type="button" class="private-btn" id="testPushButton" style="display:none">📨 Enviar notificação de teste</button><div class="ack-status" id="notificationStatus"></div></div></div></div></div></section>
+<div class="ack-status" id="ackStatus"></div><div class="push-card"><strong>🔔 Notificações</strong><div class="muted">Receba notificações da equipa neste dispositivo, mesmo quando a aplicação estiver fechada.</div><button type="button" class="private-btn" id="enableNotifications">Ativar notificações</button><button type="button" class="private-btn" id="disableNotifications" style="display:none">Desativar neste dispositivo</button><button type="button" class="private-btn" id="testPushButton" style="display:none">📨 Enviar notificação de teste</button><div class="ack-status" id="pushTestStatus" role="status" aria-live="polite"></div><div class="ack-status" id="notificationStatus"></div></div></div></div></div></section>
 <section id="calendario" class="private-section"><div class="wrap">
 <div class="section-head">
   <div><h2>🗓️ Calendário</h2><span class="muted" id="calendarPeriod">25 de agosto de 2026 a 30 de junho de 2027</span></div>
@@ -1145,15 +1145,19 @@ async function sendPushForContentChange(oldC,newC){
 }
 
 async function sendTestPush(){
+ const btn=$("testPushButton");
+ if(btn)btn.disabled=true;
+ setStatus("pushTestStatus","A enviar notificação de teste… aguarda, por favor.");
  try{
-  const btn=$("testPushButton"); if(btn)btn.disabled=true;
-  setStatus("pushTestStatus","A enviar notificação de teste…");
+  if(!currentUser) throw new Error("Não existe uma sessão iniciada. Sai e volta a entrar como treinador.");
+  if((currentUser.app_metadata?.role||"parent")!=="coach") throw new Error("Esta função está disponível apenas para a conta do treinador.");
   const data=await sendPushForContentChange({notices:[],games:[],trainings:[],cancelledTrainings:[],convocation:""},{notices:[{id:"push-test"}],games:[],trainings:[],cancelledTrainings:[],convocation:""});
-  setStatus("pushTestStatus",`✓ Servidor: ${data.sent||0} enviada(s), ${data.removed||0} removida(s).${data.errors?.length?" Erros: "+data.errors.join(" | "):""}`);
+  const errors=Array.isArray(data.errors)&&data.errors.length ? " Erros: "+data.errors.join(" | ") : "";
+  setStatus("pushTestStatus",`Resposta do servidor — ${data.sent??0} enviada(s), ${data.removed??0} subscrição(ões) inválida(s) removida(s).${errors}`);
  }catch(e){
   console.error("Teste Push:",e);
-  setStatus("pushTestStatus","✕ Falha no envio: "+(e?.message||e));
- }finally{ const btn=$("testPushButton"); if(btn)btn.disabled=false; }
+  setStatus("pushTestStatus","Falha no envio: "+(e?.message||e));
+ }finally{ if(btn)btn.disabled=false; }
 }
 
 async function loadCoachAcknowledgements(){
@@ -1351,7 +1355,10 @@ function bindNotificationButtons(){
 bindNotificationButtons();
 if((currentUser?.app_metadata?.role||"parent")==="coach") {
  const testBtn=$("testPushButton");
- if(testBtn){ testBtn.style.display=""; testBtn.addEventListener("click",sendTestPush); }
+ if(testBtn){
+  testBtn.style.display="";
+  if(!testBtn.dataset.bound){ testBtn.dataset.bound="1"; testBtn.addEventListener("click",(event)=>{ event.preventDefault(); sendTestPush(); }); }
+ }
 }
 
 })();
