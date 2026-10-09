@@ -219,7 +219,7 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
   <span>✓ Sessão iniciada</span>
   <button type="button" id="parentLogout">Sair</button>
 </div>
-<div class="ack-status" id="ackStatus"></div><div class="push-card"><strong>🔔 Notificações</strong><div class="muted">Receba notificações da equipa neste dispositivo, mesmo quando a aplicação estiver fechada.</div><button type="button" class="private-btn" id="enableNotifications">Ativar notificações</button><button type="button" class="private-btn" id="disableNotifications" style="display:none">Desativar neste dispositivo</button><div class="ack-status" id="notificationStatus"></div></div></div></div></div></section>
+<div class="ack-status" id="ackStatus"></div><div class="push-card"><strong>🔔 Notificações</strong><div class="muted">Receba notificações da equipa neste dispositivo, mesmo quando a aplicação estiver fechada.</div><button type="button" class="private-btn" id="enableNotifications">Ativar notificações</button><button type="button" class="private-btn" id="disableNotifications" style="display:none">Desativar neste dispositivo</button><button type="button" class="private-btn" id="testPushButton" style="display:none">📨 Enviar notificação de teste</button><div class="ack-status" id="notificationStatus"></div></div></div></div></div></section>
 <section id="calendario" class="private-section"><div class="wrap">
 <div class="section-head">
   <div><h2>🗓️ Calendário</h2><span class="muted" id="calendarPeriod">25 de agosto de 2026 a 30 de junho de 2027</span></div>
@@ -888,7 +888,7 @@ if ('serviceWorker' in navigator) {
   });
   window.addEventListener('load', async()=>{
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=20261004-13',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=20261008-push-2',{updateViaCache:'none'});
       await reg.update();
       if(reg.waiting)reg.waiting.postMessage({type:'SKIP_WAITING'});
     }catch(e){console.warn('Service Worker:',e)}
@@ -1141,6 +1141,19 @@ async function sendPushForContentChange(oldC,newC){
  const r=await fetch(window.PUSH_FUNCTION_URL,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify(msg)});
  const data=await r.json().catch(()=>({}));
  if(!r.ok)throw new Error(data.error||("HTTP "+r.status));
+ return data;
+}
+
+async function sendTestPush(){
+ try{
+  const btn=$("testPushButton"); if(btn)btn.disabled=true;
+  setStatus("pushTestStatus","A enviar notificação de teste…");
+  const data=await sendPushForContentChange({notices:[],games:[],trainings:[],cancelledTrainings:[],convocation:""},{notices:[{id:"push-test"}],games:[],trainings:[],cancelledTrainings:[],convocation:""});
+  setStatus("pushTestStatus",`✓ Servidor: ${data.sent||0} enviada(s), ${data.removed||0} removida(s).${data.errors?.length?" Erros: "+data.errors.join(" | "):""}`);
+ }catch(e){
+  console.error("Teste Push:",e);
+  setStatus("pushTestStatus","✕ Falha no envio: "+(e?.message||e));
+ }finally{ const btn=$("testPushButton"); if(btn)btn.disabled=false; }
 }
 
 async function loadCoachAcknowledgements(){
@@ -1197,8 +1210,8 @@ document.addEventListener("click",async e=>{
   $("gestao-equipa")?.classList.remove("show");renderConvocationAthletes();
 }
  const athleteBtn=e.target.closest?.("[data-athlete]"); if(athleteBtn)acknowledgeAthlete(athleteBtn.dataset.athlete,athleteBtn);
- if(e.target.id==="enableNotifications")enableNotifications();
-if(e.target.id==="disableNotifications")disableNotifications();
+ if(e.target.id==="enableNotifications") { e.preventDefault(); enableNotifications(); }
+if(e.target.id==="disableNotifications") { e.preventDefault(); disableNotifications(); }
  if(e.target.id==="adminAddNotice"){content.notices=content.notices||[];content.notices.unshift({title:$("adminNoticeTitle").value.trim(),type:$("adminNoticeType").value,text:$("adminNoticeText").value.trim()});$("adminNoticeTitle").value="";$("adminNoticeText").value="";renderAdmin()}
  if(e.target.id==="adminAddGame"){content.games=content.games||[];content.games.push({data:$("adminGameDate").value.trim(),adversario:$("adminGameOpponent").value.trim(),hora:$("adminGameTime").value.trim(),local:$("adminGamePlace").value.trim(),tipo:$("adminGameType").value,casaFora:$("adminGameHome").value,descricao:$("adminGameDescription").value.trim()});renderAdmin()}
  if(e.target.id==="adminAddTraining"){content.trainings=content.trainings||[];content.trainings.push({data:$("adminTrainingDate").value.trim(),hora:$("adminTrainingTime").value.trim(),local:$("adminTrainingPlace").value.trim(),descricao:$("adminTrainingDescription").value.trim()});renderAdmin()}
@@ -1322,6 +1335,24 @@ async function refreshNotificationButton(){
  }catch(e){console.warn("Estado das notificações:",e)}
 }
 
+// Listener direto: evita depender apenas do delegado global de cliques.
+function bindNotificationButtons(){
+ const enable=$("enableNotifications");
+ const disable=$("disableNotifications");
+ if(enable && !enable.dataset.bound){
+   enable.dataset.bound="1";
+   enable.addEventListener("click",()=>{ enableNotifications(); });
+ }
+ if(disable && !disable.dataset.bound){
+   disable.dataset.bound="1";
+   disable.addEventListener("click",()=>{ disableNotifications(); });
+ }
+}
+bindNotificationButtons();
+if((currentUser?.app_metadata?.role||"parent")==="coach") {
+ const testBtn=$("testPushButton");
+ if(testBtn){ testBtn.style.display=""; testBtn.addEventListener("click",sendTestPush); }
+}
 
 })();
 })();
