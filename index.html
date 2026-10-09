@@ -908,6 +908,7 @@ if ('serviceWorker' in navigator) {
 <script id="fase3-app">
 (function(){
 let client=null, content={notices:[],games:[],trainings:[],convocation:"",convocationAthletes:[]};
+let lastPublishedContent=null;
 let currentUser=null;
 const $=id=>document.getElementById(id);
 function setStatus(id,msg){const e=$(id);if(e)e.textContent=msg||""}
@@ -1039,10 +1040,12 @@ async function loadContent(){
   if(r.error)throw r.error;
   if(r.data?.content){
    publicContent(r.data.content);
+   lastPublishedContent=JSON.parse(JSON.stringify(r.data.content));
    const el=document.querySelector("#avisos .section-head .muted");
    if(el)el.textContent=r.data.updated_at?"Atualizado: "+new Date(r.data.updated_at).toLocaleString("pt-PT"):"Atualizado online";
   }else{
    publicContent({notices:[],games:[],trainings:[],convocation:"",convocationAthletes:[]});
+   lastPublishedContent=JSON.parse(JSON.stringify(content));
   }
  }catch(e){
   console.error("Supabase team_content:",e);
@@ -1097,25 +1100,35 @@ function showCoach(){
 async function save(){
  try{
   const c=await getClient();setStatus("adminSaveStatus","A guardar…");
-  const previousContent=JSON.parse(JSON.stringify(content||{}));
+  const previousContent=JSON.parse(JSON.stringify(lastPublishedContent ?? content ?? {}));
   const savedAt=new Date().toISOString();
   const payload={...content,updated_at:savedAt};
   const r=await c.from("team_content").upsert({id:"main",content:payload,updated_at:savedAt},{onConflict:"id"});
   if(r.error){setStatus("adminSaveStatus","Erro ao guardar: "+r.error.message);return false}
   content=payload;
+  lastPublishedContent=JSON.parse(JSON.stringify(payload));
   publicContent(payload);
   const el=document.querySelector("#avisos .section-head .muted");
   if(el)el.textContent="Atualizado: "+new Date(savedAt).toLocaleString("pt-PT");
   setStatus("adminSaveStatus","Alterações guardadas.");
   // O envio é feito no servidor (Edge Function), nunca com uma chave secreta no navegador.
   try{
-    await sendPushForContentChange(previousContent,payload);
+    if(hasNotifiableChanges(previousContent,payload)){
+      const result=await sendPushForContentChange(previousContent,payload);
+      if(result && result.ok===false)throw new Error(result.error||"Falha no envio Push");
+      if(result)setStatus("adminSaveStatus",`Alterações guardadas. Notificações enviadas: ${result.sent??0}.`);
+    }
   }catch(pushErr){
     console.warn("Push após publicação:",pushErr);
     setStatus("adminSaveStatus","Alterações guardadas. Notificações: "+(pushErr?.message||"não enviadas"));
   }
   return true;
  }catch(err){setStatus("adminSaveStatus","Erro ao guardar: "+(err?.message||"verifica a ligação ao Supabase."));return false}
+}
+
+function hasNotifiableChanges(oldC,newC){
+ const fields=["notices","games","trainings","cancelledTrainings","convocation","convocationAthletes"];
+ return fields.some(key=>JSON.stringify(oldC?.[key]??(key==="convocation"?"":[]))!==JSON.stringify(newC?.[key]??(key==="convocation"?"":[])));
 }
 
 function getContentChangeNotification(oldC,newC){
