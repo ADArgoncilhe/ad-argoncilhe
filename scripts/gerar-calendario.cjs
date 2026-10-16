@@ -36,7 +36,7 @@ for(const g of games){
   const endDate=new Date(Date.UTC(year,month-1,day,endHour,endMin));
   end=endDate.toISOString().slice(0,10).replace(/-/g,'')+'T'+endDate.toISOString().slice(11,16).replace(':','')+'00';
  }else{end=new Date(Date.UTC(year,month-1,day+1)).toISOString().slice(0,10).replace(/-/g,'')}
- const identity=String(g.id||g.uid||[opponent,tipo,place].join('|'));
+ const identity=String(g.id||g.uid||[opponent,tipo].join('|'));
  const occurrence=duplicates.get(identity)||0;duplicates.set(identity,occurrence+1);
  const uid=crypto.createHash('sha256').update(identity+'|'+occurrence).digest('hex').slice(0,24)+'@adargoncilhe.github.io';
  const suffix=timed?';TZID=Europe/Lisbon':';VALUE=DATE';
