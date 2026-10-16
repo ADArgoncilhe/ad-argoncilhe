@@ -7,4 +7,234 @@ X-WR-CALNAME:AD Argoncilhe Sub-10 - Jogos
 X-WR-TIMEZONE:Europe/Lisbon
 REFRESH-INTERVAL;VALUE=DURATION:PT1H
 X-PUBLISHED-TTL:PT1H
+BEGIN:VEVENT
+UID:35fbbcf7552de999e113a217@adargoncilhe.github.io
+DTSTAMP:20261016T194745Z
+DTSTART;TZID=Europe/Lisbon:20260912T133000
+DTEND;TZID=Europe/Lisbon:20260912T135500
+SUMMARY:AD Argoncilhe · A.D. Argoncilhe 2 vs 2 C.F. Serzedo
+LOCATION:Mavipal
+DESCRIPTION:Torneio — ADAS CUP - Grupo A
+URL:https://adargoncilhe.github.io/ad-argoncilhe/
+END:VEVENT
+BEGIN:VEVENT
+UID:cf7462d5260613965d8a74dd@adargoncilhe.github.io
+DTSTAMP:20261016T194745Z
+DTSTART;TZID=Europe/Lisbon:20260912T143000
+DTEND;TZID=Europe/Lisbon:20260912T145500
+SUMMARY:AD Argoncilhe · A.D. Argoncilhe 9 vs 1 C.D. Feirense Fem.
+LOCATION:Mavipal
+DESCRIPTION:Torneio — ADAS CUP - Grupo A
+URL:https://adargoncilhe.github.io/ad-argoncilhe/
+END:VEVENT
+BEGIN:VEVENT
+UID:85a0406f859d91caa66c43bf@adargoncilhe.github.io
+DTSTAMP:20261016T194745Z
+DTSTART;TZID=Europe/Lisbon:20260912T150000
+DTEND;TZID=Europe/Lisbon:20260912T152500
+SUMMARY:AD Argoncilhe · A.D.F.Anta 3 vs 1 A.D.Argoncilhe
+LOCATION:Mavipal
+DESCRIPTION:Torneio — ADAS CUP - Grupo B
+URL:https://adargoncilhe.github.io/ad-argoncilhe/
+END:VEVENT
+BEGIN:VEVENT
+UID:ed2d129ba0d8db34b9c138d8@adargoncilhe.github.io
+DTSTAMP:20261016T194745Z
+DTSTART;TZID=Europe/Lisbon:20260912T160000
+DTEND;TZID=Europe/Lisbon:20260912T162500
+SUMMARY:AD Argoncilhe · Valadares G.F.C 1 vs 5 A.D.Argoncilhe
+LOCATION:Mavipal
+DESCRIPTION:Torneio — ADAS CUP - Grupo B
+URL:https://adargoncilhe.github.io/ad-argoncilhe/
+END:VEVENT
+BEGIN:VEVENT
+UID:e9bb0da105e9aad244f8dd9f@adargoncilhe.github.io
+DTSTAMP:20261016T194745Z
+DTSTART;TZID=Europe/Lisbon:20260913T143000
+DTEND;TZID=Europe/Lisbon:20260913T145500
+SUMMARY:AD Argoncilhe · A.D.Argoncilhe 3 vs  0 A.D.Argoncilhe
+LOCATION:Mavipal
+DESCRIPTION:Torneio — ADAS CUP - Jogo 2
+URL:https://adargoncilhe.github.io/ad-argoncilhe/
+END:VEVENT
+BEGIN:VEVENT
+UID:2c322565650837ac37d02150@adargoncilhe.github.io
+DTSTAMP:20261016T194745Z
+DTSTART;TZID=Europe/Lisbon:20260913T150000
+DTEND;TZID=Europe/Lisbon:20260913T152500
+SUMMARY:AD Argoncilhe · Valadares 0 vs 3 A.D.Argoncilhe
+LOCATION:Mavipal
+DESCRIPTION:Torneio — ADAS CUP - Jogo 4
+URL:https://adargoncilhe.github.io/ad-argoncilhe/
+END:VEVENT
+BEGIN:VEVENT
+UID:24cf325eeaa45cc1f95003ad@adargoncilhe.github.io
+DTSTAMP:20261016T194745Z
+DTSTART;TZID=Europe/Lisbon:20260913T163000
+DTEND;TZID=Europe/Lisbon:20260913T165500
+SUMMARY:AD Argoncilhe · A.D.Argoncilhe 1 vs 0 Anta
+LOCATION:Argoncilhe
+DESCRIPTION:Torneio — ADAS CUP - FINAL
+URL:https://adargoncilhe.github.io/ad-argoncilhe/
+END:VEVENT
+BEGIN:VEVENT
+UID:0049f74cfc375b93b7bc3276@adargoncilhe.github.io
+DTSTAMP:20261016T194745Z
+DTSTART;TZID=Europe/Lisbon:20260919T110000
+DTEND;TZID=Europe/Lisbon:20260919T121500
+SUMMARY:AD Argoncilhe · Canedo Futebol Clube
+LOCATION:Canedo
+DESCRIPTION:Jogo — Jogo amigável de preparação.
+URL:https://adargoncilhe.github.io/ad-argoncilhe/
+END:VEVENT
+BEGIN:VEVENT
+UID:0d7129338c6a35e3ea58ea58@adargoncilhe.github.io
+DTSTAMP:20261016T194745Z
+DTSTART;TZID=Europe/Lisbon:20260926T113000
+DTEND;TZID=Europe/Lisbon:20260926T124500
+SUMMARY:AD Argoncilhe · Grupo Desportivo Milheiroense
+LOCATION:Argoncilhe
+DESCRIPTION:Jogo — Jogo de Apresentação
+URL:https://adargoncilhe.github.io/ad-argoncilhe/
+END:VEVENT
+BEGIN:VEVENT
+UID:f9d19955b786b070b1ffcdae@adargoncilhe.github.io
+DTSTAMP:20261016T194745Z
+DTSTART;TZID=Europe/Lisbon:20261003T113000
+DTEND;TZID=Europe/Lisbon:20261003T133000
+SUMMARY:AD Argoncilhe · Cj Salesiano Arouca
+LOCATION:Campo Do Centro Social
+DESCRIPTION:Campeonato — 1ª Jornada do Campeonato.
+URL:https://adargoncilhe.github.io/ad-argoncilhe/
+END:VEVENT
+BEGIN:VEVENT
+UID:e68f764b4b8bd1b553a48e75@adargoncilhe.github.io
+DTSTAMP:20261016T194745Z
+DTSTART;TZID=Europe/Lisbon:20261010T113000
+DTEND;TZID=Europe/Lisbon:20261010T133000
+SUMMARY:AD Argoncilhe · Cd Feirense
+LOCATION:Complexo Desportivo Rodrigo Nunes
+DESCRIPTION:Campeonato — 2ª Jornada do Campeonato.
+URL:https://adargoncilhe.github.io/ad-argoncilhe/
+END:VEVENT
+BEGIN:VEVENT
+UID:9be94c2c9fe60b114868fd85@adargoncilhe.github.io
+DTSTAMP:20261016T194745Z
+DTSTART;TZID=Europe/Lisbon:20261017T103000
+DTEND;TZID=Europe/Lisbon:20261017T123000
+SUMMARY:AD Argoncilhe · Romariz Fc
+LOCATION:Campo Dos Valos
+DESCRIPTION:Campeonato — 3ª Jornada do Campeonato.
+URL:https://adargoncilhe.github.io/ad-argoncilhe/
+END:VEVENT
+BEGIN:VEVENT
+UID:e25388cb26fd116007b42f63@adargoncilhe.github.io
+DTSTAMP:20261016T194745Z
+DTSTART;TZID=Europe/Lisbon:20261024T101500
+DTEND;TZID=Europe/Lisbon:20261024T121500
+SUMMARY:AD Argoncilhe · F.C. Cortegaça B
+LOCATION:Campo Do Centro Social
+DESCRIPTION:Campeonato — 4ª Jornada do Campeonato.
+URL:https://adargoncilhe.github.io/ad-argoncilhe/
+END:VEVENT
+BEGIN:VEVENT
+UID:a76b13d8f0c72607e2d067ab@adargoncilhe.github.io
+DTSTAMP:20261016T194745Z
+DTSTART;TZID=Europe/Lisbon:20261031T113000
+DTEND;TZID=Europe/Lisbon:20261031T133000
+SUMMARY:AD Argoncilhe · Lusitânia Lourosa Fc
+LOCATION:Academia Forte Paixão
+DESCRIPTION:Campeonato — 5ª Jornada do Campeonato.
+URL:https://adargoncilhe.github.io/ad-argoncilhe/
+END:VEVENT
+BEGIN:VEVENT
+UID:2e2e966746f0f27649b3bccb@adargoncilhe.github.io
+DTSTAMP:20261016T194745Z
+DTSTART;TZID=Europe/Lisbon:20261107T113000
+DTEND;TZID=Europe/Lisbon:20261107T133000
+SUMMARY:AD Argoncilhe · Cf U. Lamas Formação
+LOCATION:Campo Do Centro Social
+DESCRIPTION:Campeonato — 6ª Jornada do Campeonato.
+URL:https://adargoncilhe.github.io/ad-argoncilhe/
+END:VEVENT
+BEGIN:VEVENT
+UID:7210f1107dd76c27d72c83be@adargoncilhe.github.io
+DTSTAMP:20261016T194745Z
+DTSTART;TZID=Europe/Lisbon:20261114T113000
+DTEND;TZID=Europe/Lisbon:20261114T133000
+SUMMARY:AD Argoncilhe · Fiães Sc
+LOCATION:Academia Fiães Sc
+DESCRIPTION:Campeonato — 7ª Jornada do Campeonato.
+URL:https://adargoncilhe.github.io/ad-argoncilhe/
+END:VEVENT
+BEGIN:VEVENT
+UID:d18065f4610f8ee6ad4e968a@adargoncilhe.github.io
+DTSTAMP:20261016T194745Z
+DTSTART;TZID=Europe/Lisbon:20261121T113000
+DTEND;TZID=Europe/Lisbon:20261121T133000
+SUMMARY:AD Argoncilhe · CJ Salesiano Arouca
+LOCATION:Complexo Desportivo de Arouca
+DESCRIPTION:Campeonato — 8ª Jornada do Campeonato.
+URL:https://adargoncilhe.github.io/ad-argoncilhe/
+END:VEVENT
+BEGIN:VEVENT
+UID:010edb53be32f4ff7502927a@adargoncilhe.github.io
+DTSTAMP:20261016T194745Z
+DTSTART;TZID=Europe/Lisbon:20261128T113000
+DTEND;TZID=Europe/Lisbon:20261128T133000
+SUMMARY:AD Argoncilhe · CD Feirense
+LOCATION:Campo Do Centro Social
+DESCRIPTION:Campeonato — 9ª Jornada do Campeonato.
+URL:https://adargoncilhe.github.io/ad-argoncilhe/
+END:VEVENT
+BEGIN:VEVENT
+UID:1c423c71d8607ada23ca8ee3@adargoncilhe.github.io
+DTSTAMP:20261016T194745Z
+DTSTART;TZID=Europe/Lisbon:20261205T113000
+DTEND;TZID=Europe/Lisbon:20261205T133000
+SUMMARY:AD Argoncilhe · Romariz FC
+LOCATION:Campo Do Centro Social
+DESCRIPTION:Campeonato — 10ª Jornada do Campeonato.
+URL:https://adargoncilhe.github.io/ad-argoncilhe/
+END:VEVENT
+BEGIN:VEVENT
+UID:e1c45f0fb445da94d5901ca8@adargoncilhe.github.io
+DTSTAMP:20261016T194745Z
+DTSTART;TZID=Europe/Lisbon:20261212T113000
+DTEND;TZID=Europe/Lisbon:20261212T133000
+SUMMARY:AD Argoncilhe · F.C. Cortegaça
+LOCATION:Parque do Buçaquinho
+DESCRIPTION:Campeonato — 11ª Jornada do Campeonato.
+URL:https://adargoncilhe.github.io/ad-argoncilhe/
+END:VEVENT
+BEGIN:VEVENT
+UID:7065c0a9c24eae9e2519e434@adargoncilhe.github.io
+DTSTAMP:20261016T194745Z
+DTSTART;TZID=Europe/Lisbon:20270109T113000
+DTEND;TZID=Europe/Lisbon:20270109T133000
+SUMMARY:AD Argoncilhe · Lusitânia Lourosa FC
+LOCATION:Campo Do Centro Social
+DESCRIPTION:Campeonato — 12ª Jornada do Campeonato.
+URL:https://adargoncilhe.github.io/ad-argoncilhe/
+END:VEVENT
+BEGIN:VEVENT
+UID:60149d6e6fe9ed04c15582ba@adargoncilhe.github.io
+DTSTAMP:20261016T194745Z
+DTSTART;TZID=Europe/Lisbon:20270116T113000
+DTEND;TZID=Europe/Lisbon:20270116T133000
+SUMMARY:AD Argoncilhe · CF U. Lamas Formação
+LOCATION:Campo Recumas
+DESCRIPTION:Campeonato — 13ª Jornada do Campeonato.
+URL:https://adargoncilhe.github.io/ad-argoncilhe/
+END:VEVENT
+BEGIN:VEVENT
+UID:8473d9ea0ad5769e04d3a75c@adargoncilhe.github.io
+DTSTAMP:20261016T194745Z
+DTSTART;TZID=Europe/Lisbon:20270123T113000
+DTEND;TZID=Europe/Lisbon:20270123T133000
+SUMMARY:AD Argoncilhe · Fiães SC
+LOCATION:Campo Do Centro Social
+DESCRIPTION:Campeonato — 14ª Jornada do Campeonato.
+URL:https://adargoncilhe.github.io/ad-argoncilhe/
+END:VEVENT
 END:VCALENDAR
