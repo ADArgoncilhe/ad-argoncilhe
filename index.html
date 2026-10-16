@@ -533,6 +533,7 @@ document.addEventListener('click',async function(e){
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q + ', Portugal')}`;
   }
 
+  function wazeUrl(place){const q=String(place||"").replace(/^(Casa · |Fora · )/,"").trim();return "https://waze.com/ul?q="+encodeURIComponent(q+", Portugal")+"&navigate=yes"}
   function mapLink(place, label){
     const text = label || place || 'Abrir no mapa';
     return `<a class="location-link" href="${mapUrl(place)}" target="_blank" rel="noopener noreferrer" title="Abrir ${String(place || 'localização').replace(/"/g,'&quot;')} no mapa">${text}</a>`;
@@ -558,23 +559,23 @@ document.addEventListener('click',async function(e){
 document.getElementById("adaExportGames")?.addEventListener("click",exportGamesCalendar);
 function renderParentNextGames(){
  const box=document.getElementById("adaParentNextGames");if(!box)return;
- box.hidden=!window.__adaParentLoggedIn;if(!window.__adaParentLoggedIn)return;
+ box.hidden=!window.__adaParentLoggedIn;if(!window.__adaParentLoggedIn){box.replaceChildren();return}
  const safe=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
  const upcoming=games.filter(g=>g.date>=localDateKey(new Date())).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,4);
  box.innerHTML="<h3>Próximos jogos</h3>"+(upcoming.length?upcoming.map(g=>{
   const place=String(g.place||"").replace(/^(Casa · |Fora · )/,"").trim();
-  return '<div class="ada-parent-game"><strong>'+safe(g.adversario||g.activity||"Jogo")+'</strong><div class="muted">'+safe(g.date.split("-").reverse().join("/"))+' · '+safe(g.time||"A confirmar")+' · '+safe(g.tipo||"Jogo")+'</div><div class="muted">'+safe(place||"Local a confirmar")+'</div>'+(place?'<a class="ada-gps-link" href="'+mapUrl(place)+'" target="_blank" rel="noopener noreferrer">Abrir no GPS ↗</a>':'')+'</div>';
+  return '<div class="ada-parent-game"><strong>'+safe(g.adversario||g.activity||"Jogo")+'</strong><div class="muted">'+safe(g.date.split("-").reverse().join("/"))+' · '+safe(g.time||"A confirmar")+' · '+safe(g.tipo||"Jogo")+'</div><div class="muted">'+safe(place||"Local a confirmar")+'</div>'+(place?'<span class="ada-nav-links"><a class="ada-gps-link" href="'+mapUrl(place)+'" target="_blank" rel="noopener noreferrer">Abrir no GPS ↗</a><a class="ada-gps-link" href="'+wazeUrl(place)+'" target="_blank" rel="noopener noreferrer">Abrir Waze ↗</a></span>':'')+'</div>';
  }).join(""):'<p class="muted">Sem jogos futuros registados.</p>');
 }
 function adaEscape(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function adaParentFeatures(){
  const match=document.getElementById("adaMatchDetail"),agenda=document.getElementById("adaWeekAgenda");if(!match||!agenda)return;
- const logged=!!window.__adaParentLoggedIn;match.hidden=agenda.hidden=!logged;if(!logged)return;
+ const logged=!!window.__adaParentLoggedIn;match.hidden=agenda.hidden=!logged;if(!logged){match.replaceChildren();agenda.replaceChildren();return}
  const today=new Date(),key=localDateKey(today);
  const next=games.filter(g=>/^\d{4}-\d{2}-\d{2}$/.test(g.date)&&g.date>=key).sort((a,b)=>a.date.localeCompare(b.date)||String(a.time||"").localeCompare(String(b.time||"")))[0];
  if(next){
  const place=String(next.place||"").replace(/^(Casa · |Fora · )/,"").trim();
- match.innerHTML='<h3>⚽ Ficha do próximo jogo</h3><div class="ada-feature-grid">'+[['Adversário',next.adversario||"A confirmar"],['Competição',next.tipo||"Jogo"],['Data',next.date.split("-").reverse().join("/")],['Hora do jogo',next.time||"A confirmar"],['Campo',place||"A confirmar"],['Concentração',next.concentracao||next.concentration||"Consultar indicações do treinador"]].map(([a,b])=>'<div><small>'+adaEscape(a)+'</small><strong>'+adaEscape(b)+'</strong></div>').join("")+'</div>'+(next.description&&next.description!=="—"?'<p class="ada-feature-note"><strong>Indicações:</strong> '+adaEscape(next.description)+'</p>':'')+(place?'<a class="ada-gps-link" href="'+mapUrl(place)+'" target="_blank" rel="noopener noreferrer">📍 Abrir campo no GPS ↗</a>':'')+'<p class="ada-feature-note">A convocatória e a confirmação de leitura estão na Área dos Pais.</p>';
+ match.innerHTML='<h3>⚽ Ficha do próximo jogo</h3><div class="ada-feature-grid">'+[['Adversário',next.adversario||"A confirmar"],['Competição',next.tipo||"Jogo"],['Data',next.date.split("-").reverse().join("/")],['Hora do jogo',next.time||"A confirmar"],['Campo',place||"A confirmar"],['Concentração',next.concentracao||next.concentration||"Consultar indicações do treinador"]].map(([a,b])=>'<div><small>'+adaEscape(a)+'</small><strong>'+adaEscape(b)+'</strong></div>').join("")+'</div>'+(next.description&&next.description!=="—"?'<p class="ada-feature-note"><strong>Indicações:</strong> '+adaEscape(next.description)+'</p>':'')+(place?'<span class="ada-nav-links"><a class="ada-gps-link" href="'+mapUrl(place)+'" target="_blank" rel="noopener noreferrer">📍 Abrir campo no GPS ↗</a><a class="ada-gps-link" href="'+wazeUrl(place)+'" target="_blank" rel="noopener noreferrer">Abrir Waze ↗</a></span>':'')+'<p class="ada-feature-note">A convocatória e a confirmação de leitura estão na Área dos Pais.</p>';
  }else match.innerHTML='<h3>⚽ Ficha do próximo jogo</h3><p class="muted">Sem jogos futuros registados.</p>';
  const events=[];
  for(let n=0;n<7;n++){const d=new Date(today.getFullYear(),today.getMonth(),today.getDate()+n),day=localDateKey(d);getCalendarItems(d.getFullYear(),d.getMonth()).filter(x=>x.date===day).forEach(x=>events.push(x))}
@@ -894,7 +895,7 @@ const players = [
   </div>
 </footer>
 <div class="ada-release-footer" aria-label="Informações da versão"><span>Versão 28 · Restauro de 16/10/2026</span><span id="adaLastUpdate">Última atualização: a consultar…</span></div>
-<style id="ada-four-parent-v28">.ada-parent-feature{margin:15px 0;padding:16px;border:1px solid #444;border-radius:14px;background:#1d1d1d;color:#fff}.ada-parent-feature[hidden]{display:none!important}.ada-parent-feature h3{margin:0 0 14px}.ada-feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.ada-feature-grid>div{padding:10px;border:1px solid #444;border-radius:10px;min-width:0;overflow-wrap:anywhere}.ada-feature-grid small{display:block;color:#bbb;margin-bottom:5px}.ada-feature-note{font-size:13px;color:#ccc;line-height:1.5}.ada-agenda-line{display:grid;grid-template-columns:90px 1fr;gap:10px;padding:12px 0;border-top:1px solid #444}.ada-notice-entry{padding:12px 0;border-top:1px solid #444}.ada-notice-entry p{white-space:normal;overflow-wrap:anywhere}.ada-ack-summary{padding:12px;border:1px solid #555;border-radius:10px;font-weight:700}@media(max-width:440px){.ada-feature-grid{grid-template-columns:1fr}}</style><style id="ada-parent-experience-style">.ada-parent-help,.ada-parent-next-games{margin:14px 0;padding:15px;border:1px solid #444;border-radius:14px;background:#1d1d1d;color:#fff}.ada-parent-help p{margin:7px 0 0;line-height:1.5;color:#ddd}.ada-parent-next-games[hidden]{display:none!important}.ada-parent-next-games h3{margin:0 0 12px}.ada-parent-game{padding:12px 0;border-top:1px solid #444;line-height:1.5}.ada-gps-link{display:inline-block;margin-top:8px;padding:8px 12px;border:1px solid #888;border-radius:9px;color:#fff;text-decoration:none;font-weight:600}</style><style id="ada-v28-center-events">
+<style id="ada-logout-waze-v28">.ada-nav-links{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.ada-nav-links .ada-gps-link{margin-top:8px}#adaNoticeCenter[hidden],#adaMatchDetail[hidden],#adaWeekAgenda[hidden],#adaParentNextGames[hidden]{display:none!important}</style><style id="ada-four-parent-v28">.ada-parent-feature{margin:15px 0;padding:16px;border:1px solid #444;border-radius:14px;background:#1d1d1d;color:#fff}.ada-parent-feature[hidden]{display:none!important}.ada-parent-feature h3{margin:0 0 14px}.ada-feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.ada-feature-grid>div{padding:10px;border:1px solid #444;border-radius:10px;min-width:0;overflow-wrap:anywhere}.ada-feature-grid small{display:block;color:#bbb;margin-bottom:5px}.ada-feature-note{font-size:13px;color:#ccc;line-height:1.5}.ada-agenda-line{display:grid;grid-template-columns:90px 1fr;gap:10px;padding:12px 0;border-top:1px solid #444}.ada-notice-entry{padding:12px 0;border-top:1px solid #444}.ada-notice-entry p{white-space:normal;overflow-wrap:anywhere}.ada-ack-summary{padding:12px;border:1px solid #555;border-radius:10px;font-weight:700}@media(max-width:440px){.ada-feature-grid{grid-template-columns:1fr}}</style><style id="ada-parent-experience-style">.ada-parent-help,.ada-parent-next-games{margin:14px 0;padding:15px;border:1px solid #444;border-radius:14px;background:#1d1d1d;color:#fff}.ada-parent-help p{margin:7px 0 0;line-height:1.5;color:#ddd}.ada-parent-next-games[hidden]{display:none!important}.ada-parent-next-games h3{margin:0 0 12px}.ada-parent-game{padding:12px 0;border-top:1px solid #444;line-height:1.5}.ada-gps-link{display:inline-block;margin-top:8px;padding:8px 12px;border:1px solid #888;border-radius:9px;color:#fff;text-decoration:none;font-weight:600}</style><style id="ada-v28-center-events">
 .hero-grid>.season{text-align:center!important;align-items:center!important}
 .hero-grid>.season>div{text-align:center!important;display:flex;flex-direction:column;align-items:center}
 .hero-grid>.season .eyebrow,.hero-grid>.season strong,.hero-grid>.season .muted,.hero-grid>.season .pill{text-align:center!important}
@@ -960,7 +961,7 @@ const players = [
      }
    }catch(e){console.warn('Atualização da aplicação:',e)}
    const url=new URL(window.location.href);
-   url.searchParams.set('v','20261016-v28-pais-quatro-'+Date.now());
+   url.searchParams.set('v','20261016-v28-logout-waze-'+Date.now());
    window.location.replace(url.toString());
  }
  refreshBtn?.addEventListener('click',refreshApp);
@@ -971,7 +972,7 @@ if ('serviceWorker' in navigator) {
   // A new service worker takes control without forcing a reload while forms are open.
   window.addEventListener('load', async()=>{
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=20261016-v28-pais-quatro',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=20261016-v28-logout-waze',{updateViaCache:'none'});
       await reg.update();
     }catch(e){console.warn('Service Worker:',e)}
   });
@@ -1324,7 +1325,14 @@ document.addEventListener("click",async e=>{
   currentUser=null;hideParentSession();sessionStorage.removeItem("ad_argoncilhe_auth");
   document.querySelectorAll(".private-hidden-content").forEach(x=>x.classList.add("private-hidden-content"));
   document.querySelectorAll(".private-guard").forEach(x=>x.classList.remove("hidden"));
-  $("gestao-equipa")?.classList.remove("show");renderConvocationAthletes();
+  $("gestao-equipa")?.classList.remove("show");
+  $("convocationText").textContent="Entre na Área dos Pais para consultar a convocatória.";
+  setStatus("ackStatus","");setStatus("notificationStatus","");
+  const ack=$("coachAckList");if(ack)ack.replaceChildren();
+  const summary=$("adaCoachAckSummary");if(summary)summary.textContent="";
+  const exp=$("adaExportGames"),hint=$("adaExportHint");if(exp)exp.style.display="none";if(hint)hint.style.display="none";
+  window.renderNotices?.(content.notices||[],false);
+  renderConvocationAthletes();
 }
  const athleteBtn=e.target.closest?.("[data-athlete]"); if(athleteBtn)acknowledgeAthlete(athleteBtn.dataset.athlete,athleteBtn);
  // Push: handled by dedicated button listeners.
