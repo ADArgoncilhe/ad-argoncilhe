@@ -35,7 +35,7 @@ const escape=v=>String(v??'').replace(/\\/g,'\\\\').replace(/\r?\n/g,'\\n').repl
 const compact=d=>d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
 const dateKey=v=>{const x=String(v||'');return /^\d{2}\/\d{2}\/\d{4}$/.test(x)?x.split('/').reverse().join('-'):x};
 const events=[];const duplicates=new Map();
-for(const g of games){
+for(const g of games.filter(j=>String(j.tipo||j.filterType||'').trim().toLocaleLowerCase('pt-PT')==='campeonato')){
  const date=dateKey(g.date||g.data);
  if(!/^\d{4}-\d{2}-\d{2}$/.test(date))continue;
  const [year,month,day]=date.split('-').map(Number);
