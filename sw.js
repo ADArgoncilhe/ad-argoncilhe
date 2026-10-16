@@ -1,5 +1,5 @@
 /* V28: fresh navigation, no caching of API responses, retain push support. */
-const BUILD_ID = "20261016-v28-push-fix";
+const BUILD_ID = "20261016-v28-center";
 const CACHE_NAME = `ad-argoncilhe-sub10-${BUILD_ID}`;
 const APP_SHELL = ["./index.html", "./manifest.json"];
 const SCOPE = new URL(self.registration.scope);
