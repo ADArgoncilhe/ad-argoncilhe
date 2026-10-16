@@ -1,3 +1,4 @@
+(async()=>{
 // Public match calendar feed. No player names, call-ups, or private notices.
 const fs=require('node:fs');
 const crypto=require('node:crypto');
@@ -45,3 +46,5 @@ for(const g of games){
 const calendar=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//AD Argoncilhe//Jogos Sub10//PT','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:AD Argoncilhe Sub-10 - Jogos','X-WR-TIMEZONE:Europe/Lisbon','REFRESH-INTERVAL;VALUE=DURATION:PT1H','X-PUBLISHED-TTL:PT1H',...events,'END:VCALENDAR'].join('\r\n')+'\r\n';
 fs.writeFileSync('jogos.ics',calendar,'utf8');
 console.log('Published '+events.length+' public matches');
+
+})().catch(error=>{console.error(error);process.exitCode=1});
