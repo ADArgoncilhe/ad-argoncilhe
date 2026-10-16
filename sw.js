@@ -41,7 +41,7 @@ self.addEventListener("fetch", event => {
     return;
   }
   // Only explicitly identified local static resources may be cached.
-  if (/\\.(?:png|jpg|jpeg|webp|svg|ico|css|js|json)$/i.test(url.pathname)) {
+  if ([".png",".jpg",".jpeg",".webp",".svg",".ico",".css",".js",".json"].some(ext => url.pathname.toLowerCase().endsWith(ext))) {
     event.respondWith((async () => {
       try {
         const response = await fetch(request);
