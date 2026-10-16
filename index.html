@@ -213,7 +213,7 @@ section{padding:26px 0} .section-head{display:flex;justify-content:space-between
 <div class="notice"><strong>Época 2026/2027</strong><br><span class="muted">CAMPEŌES ADAS CUP 2026.</span></div>
 </div></div></section>
 
-<section id="jogos" class="private-section"><div class="wrap"><div class="section-head"><h2>⚽ Jogos</h2><span class="muted">Jogo(s) de hoje</span></div><div id="todayGamesPublic"></div><div id="adaParentNextGames" class="ada-parent-next-games" hidden></div><div class="ada-calendar-subscribe">
+<section id="jogos" class="private-section"><div class="wrap"><div class="section-head"><h2>⚽ Jogos</h2><span class="muted">Jogo(s) de hoje</span></div><div id="todayGamesPublic"></div><div id="adaParentNextGames" class="ada-parent-next-games" hidden></div><div id="adaMatchDetail" class="ada-parent-feature" hidden></div><div id="adaWeekAgenda" class="ada-parent-feature" hidden></div><div class="ada-calendar-subscribe">
 <strong>Calendário público do Campeonato</strong>
 <p class="muted">Subscreve apenas os jogos do Campeonato, com atualizações no calendário do telemóvel. A sincronização depende da aplicação de calendário e não é imediata.</p>
 <div class="ada-calendar-actions">
@@ -234,7 +234,7 @@ document.addEventListener('click',async function(e){
   <span>✓ Sessão iniciada</span>
   <button type="button" id="parentLogout">Sair</button>
 </div>
-<div class="ack-status" id="ackStatus"></div><div class="push-card"><strong>🔔 Notificações</strong><div class="muted">Receba notificações da equipa neste dispositivo, mesmo quando a aplicação estiver fechada.</div><button type="button" class="private-btn" id="enableNotifications">Ativar notificações</button><button type="button" class="private-btn" id="disableNotifications" style="display:none">Desativar neste dispositivo</button><button type="button" class="private-btn" id="testPushButton" style="display:none">📨 Enviar notificação de teste</button><div class="ack-status" id="pushTestStatus" role="status" aria-live="polite"></div><div class="ack-status" id="notificationStatus"></div></div></div></div></div></section>
+<div class="ack-status" id="ackStatus"></div><div id="adaNoticeCenter" class="ada-parent-feature" hidden></div><div class="push-card"><strong>🔔 Notificações</strong><div class="muted">Receba notificações da equipa neste dispositivo, mesmo quando a aplicação estiver fechada.</div><button type="button" class="private-btn" id="enableNotifications">Ativar notificações</button><button type="button" class="private-btn" id="disableNotifications" style="display:none">Desativar neste dispositivo</button><button type="button" class="private-btn" id="testPushButton" style="display:none">📨 Enviar notificação de teste</button><div class="ack-status" id="pushTestStatus" role="status" aria-live="polite"></div><div class="ack-status" id="notificationStatus"></div></div></div></div></div></section>
 <section id="calendario" class="private-section"><div class="wrap">
 <div class="section-head">
   <div><h2>🗓️ Calendário</h2><span class="muted" id="calendarPeriod">25 de agosto de 2026 a 30 de junho de 2027</span></div>
@@ -273,7 +273,7 @@ document.addEventListener('click',async function(e){
 <div class="admin-card">
 <h3>✅ Confirmações da convocatória</h3>
 <p class="muted">Lista dos atletas cuja confirmação de “Tomei conhecimento” já foi registada.</p>
-<div class="admin-list" id="coachAckList"><div class="muted">A carregar…</div></div>
+<div id="adaCoachAckSummary" class="ada-ack-summary" role="status"></div><div class="admin-list" id="coachAckList"><div class="muted">A carregar…</div></div>
 </div><div class="admin-card"><h3>📋 Convocatória</h3><textarea id="adminConvocation" placeholder="Texto da convocatória"></textarea><label style="display:block;margin-top:12px;font-weight:800">Atletas convocados</label><textarea id="adminConvocationAthletes" placeholder="Um atleta por linha&#10;Ex.: Francisco Oliveira&#10;Tomás Silva&#10;Rodrigo Costa" style="min-height:140px"></textarea><button class="btn" id="adminSaveConvocation" type="button">Guardar convocatória</button><div class="fase3-status" id="coachStatus"></div></div>
 <div class="admin-card"><h3>⚽ Novo jogo</h3><input id="adminGameDate" placeholder="DD/MM/AAAA"><input id="adminGameOpponent" placeholder="Adversário"><input id="adminGameTime" placeholder="11:30"><input id="adminGamePlace" placeholder="Local"><select id="adminGameType"><option>Jogo</option><option>Torneio</option><option>Campeonato</option></select><select id="adminGameHome"><option value="C">Casa</option><option value="F">Fora</option></select><input id="adminGameDescription" placeholder="Descrição"><button class="btn" id="adminAddGame" type="button">Adicionar jogo</button><div class="admin-list" id="adminGameList"></div></div>
 <div class="admin-card"><h3>🏃 Novo treino</h3><input id="adminTrainingDate" placeholder="DD/MM/AAAA"><input id="adminTrainingTime" placeholder="18:00–19:30"><input id="adminTrainingPlace" placeholder="Local"><input id="adminTrainingDescription" placeholder="Descrição"><button class="btn" id="adminAddTraining" type="button">Adicionar treino</button><div class="admin-list" id="adminTrainingList"></div></div>
@@ -565,6 +565,22 @@ function renderParentNextGames(){
   return '<div class="ada-parent-game"><strong>'+safe(g.adversario||g.activity||"Jogo")+'</strong><div class="muted">'+safe(g.date.split("-").reverse().join("/"))+' · '+safe(g.time||"A confirmar")+' · '+safe(g.tipo||"Jogo")+'</div><div class="muted">'+safe(place||"Local a confirmar")+'</div>'+(place?'<a class="ada-gps-link" href="'+mapUrl(place)+'" target="_blank" rel="noopener noreferrer">Abrir no GPS ↗</a>':'')+'</div>';
  }).join(""):'<p class="muted">Sem jogos futuros registados.</p>');
 }
+function adaEscape(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function adaParentFeatures(){
+ const match=document.getElementById("adaMatchDetail"),agenda=document.getElementById("adaWeekAgenda");if(!match||!agenda)return;
+ const logged=!!window.__adaParentLoggedIn;match.hidden=agenda.hidden=!logged;if(!logged)return;
+ const today=new Date(),key=localDateKey(today);
+ const next=games.filter(g=>/^\d{4}-\d{2}-\d{2}$/.test(g.date)&&g.date>=key).sort((a,b)=>a.date.localeCompare(b.date)||String(a.time||"").localeCompare(String(b.time||"")))[0];
+ if(next){
+ const place=String(next.place||"").replace(/^(Casa · |Fora · )/,"").trim();
+ match.innerHTML='<h3>⚽ Ficha do próximo jogo</h3><div class="ada-feature-grid">'+[['Adversário',next.adversario||"A confirmar"],['Competição',next.tipo||"Jogo"],['Data',next.date.split("-").reverse().join("/")],['Hora do jogo',next.time||"A confirmar"],['Campo',place||"A confirmar"],['Concentração',next.concentracao||next.concentration||"Consultar indicações do treinador"]].map(([a,b])=>'<div><small>'+adaEscape(a)+'</small><strong>'+adaEscape(b)+'</strong></div>').join("")+'</div>'+(next.description&&next.description!=="—"?'<p class="ada-feature-note"><strong>Indicações:</strong> '+adaEscape(next.description)+'</p>':'')+(place?'<a class="ada-gps-link" href="'+mapUrl(place)+'" target="_blank" rel="noopener noreferrer">📍 Abrir campo no GPS ↗</a>':'')+'<p class="ada-feature-note">A convocatória e a confirmação de leitura estão na Área dos Pais.</p>';
+ }else match.innerHTML='<h3>⚽ Ficha do próximo jogo</h3><p class="muted">Sem jogos futuros registados.</p>';
+ const events=[];
+ for(let n=0;n<7;n++){const d=new Date(today.getFullYear(),today.getMonth(),today.getDate()+n),day=localDateKey(d);getCalendarItems(d.getFullYear(),d.getMonth()).filter(x=>x.date===day).forEach(x=>events.push(x))}
+ events.sort((a,b)=>a.date.localeCompare(b.date)||String(a.time||"").localeCompare(String(b.time||"")));
+ agenda.innerHTML='<h3>🗓️ Agenda dos próximos 7 dias</h3>'+(events.length?events.map(e=>'<div class="ada-agenda-line"><strong>'+adaEscape(e.date.split("-").reverse().join("/"))+'</strong><div><strong>'+adaEscape(String(e.activity||"Atividade").replace(/<[^>]*>/g,""))+'</strong><div class="muted">'+adaEscape(e.isCanceled?"Cancelado":e.time||"Hora a confirmar")+' · '+adaEscape(e.place||"Local a confirmar")+'</div></div></div>').join(""):'<p class="muted">Não existem atividades nos próximos 7 dias.</p>');
+}
+window.__adaParentFeatures=adaParentFeatures;
 window.__adaRenderParentNextGames=renderParentNextGames;
 function renderGamesArea(){
     const todayKey = localDateKey(new Date());
@@ -572,6 +588,7 @@ function renderGamesArea(){
     const publicBox = document.getElementById('todayGamesPublic');
     if(!publicBox) return;
     renderParentNextGames();
+    adaParentFeatures();
     const today = new Date();
     const todayLabel = `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`;
     if(todayGames.length){
@@ -876,7 +893,7 @@ const players = [
   </div>
 </footer>
 <div class="ada-release-footer" aria-label="Informações da versão"><span>Versão 28 · Restauro de 16/10/2026</span><span id="adaLastUpdate">Última atualização: a consultar…</span></div>
-<style id="ada-parent-experience-style">.ada-parent-help,.ada-parent-next-games{margin:14px 0;padding:15px;border:1px solid #444;border-radius:14px;background:#1d1d1d;color:#fff}.ada-parent-help p{margin:7px 0 0;line-height:1.5;color:#ddd}.ada-parent-next-games[hidden]{display:none!important}.ada-parent-next-games h3{margin:0 0 12px}.ada-parent-game{padding:12px 0;border-top:1px solid #444;line-height:1.5}.ada-gps-link{display:inline-block;margin-top:8px;padding:8px 12px;border:1px solid #888;border-radius:9px;color:#fff;text-decoration:none;font-weight:600}</style><style id="ada-v28-center-events">
+<style id="ada-four-parent-v28">.ada-parent-feature{margin:15px 0;padding:16px;border:1px solid #444;border-radius:14px;background:#1d1d1d;color:#fff}.ada-parent-feature[hidden]{display:none!important}.ada-parent-feature h3{margin:0 0 14px}.ada-feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.ada-feature-grid>div{padding:10px;border:1px solid #444;border-radius:10px;min-width:0;overflow-wrap:anywhere}.ada-feature-grid small{display:block;color:#bbb;margin-bottom:5px}.ada-feature-note{font-size:13px;color:#ccc;line-height:1.5}.ada-agenda-line{display:grid;grid-template-columns:90px 1fr;gap:10px;padding:12px 0;border-top:1px solid #444}.ada-notice-entry{padding:12px 0;border-top:1px solid #444}.ada-notice-entry p{white-space:normal;overflow-wrap:anywhere}.ada-ack-summary{padding:12px;border:1px solid #555;border-radius:10px;font-weight:700}@media(max-width:440px){.ada-feature-grid{grid-template-columns:1fr}}</style><style id="ada-parent-experience-style">.ada-parent-help,.ada-parent-next-games{margin:14px 0;padding:15px;border:1px solid #444;border-radius:14px;background:#1d1d1d;color:#fff}.ada-parent-help p{margin:7px 0 0;line-height:1.5;color:#ddd}.ada-parent-next-games[hidden]{display:none!important}.ada-parent-next-games h3{margin:0 0 12px}.ada-parent-game{padding:12px 0;border-top:1px solid #444;line-height:1.5}.ada-gps-link{display:inline-block;margin-top:8px;padding:8px 12px;border:1px solid #888;border-radius:9px;color:#fff;text-decoration:none;font-weight:600}</style><style id="ada-v28-center-events">
 .hero-grid>.season{text-align:center!important;align-items:center!important}
 .hero-grid>.season>div{text-align:center!important;display:flex;flex-direction:column;align-items:center}
 .hero-grid>.season .eyebrow,.hero-grid>.season strong,.hero-grid>.season .muted,.hero-grid>.season .pill{text-align:center!important}
@@ -942,7 +959,7 @@ const players = [
      }
    }catch(e){console.warn('Atualização da aplicação:',e)}
    const url=new URL(window.location.href);
-   url.searchParams.set('v','20261016-v28-critical-scope-'+Date.now());
+   url.searchParams.set('v','20261016-v28-pais-quatro-'+Date.now());
    window.location.replace(url.toString());
  }
  refreshBtn?.addEventListener('click',refreshApp);
@@ -953,7 +970,7 @@ if ('serviceWorker' in navigator) {
   // A new service worker takes control without forcing a reload while forms are open.
   window.addEventListener('load', async()=>{
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=20261016-v28-critical-scope',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=20261016-v28-pais-quatro',{updateViaCache:'none'});
       await reg.update();
     }catch(e){console.warn('Service Worker:',e)}
   });
@@ -978,8 +995,8 @@ const $=id=>document.getElementById(id);
 function setStatus(id,msg){const e=$(id);if(e)e.textContent=msg||""}
 function openLogin(){ $("fase3Login")?.classList.add("show"); $("fase3AuthError").textContent=""; setTimeout(()=>$("fase3Email")?.focus(),50)}
 function closeLogin(){ $("fase3Login")?.classList.remove("show") } 
-function showParentSession(){const bar=$("parentSessionBar");if(bar)bar.hidden=false;window.__adaParentLoggedIn=true;window.__adaRenderParentNextGames?.()}
-function hideParentSession(){const bar=$("parentSessionBar");if(bar)bar.hidden=true;window.__adaParentLoggedIn=false;window.__adaRenderParentNextGames?.()}
+function showParentSession(){const bar=$("parentSessionBar");if(bar)bar.hidden=false;window.__adaParentLoggedIn=true;window.__adaRenderParentNextGames?.();window.__adaParentFeatures?.();renderAdaNoticeCenter()}
+function hideParentSession(){const bar=$("parentSessionBar");if(bar)bar.hidden=true;window.__adaParentLoggedIn=false;window.__adaRenderParentNextGames?.();window.__adaParentFeatures?.();renderAdaNoticeCenter()}
 function setAuthError(msg){const e=$("fase3AuthError");if(e)e.textContent=msg||""}
 async function getClient(){
  if(client)return client;
@@ -999,7 +1016,16 @@ function publicContent(x){
  const d=document.getElementById("convocationText"); if(d)d.textContent=content.convocation||"Ainda não foi publicada uma convocatória.";
  try{window.renderNotices(content.notices||[], !!currentUser)}catch(e){console.error('Erro nos avisos:',e)}
  renderConvocationAthletes();
+ renderAdaNoticeCenter();
 }
+function renderAdaNoticeCenter(){
+ const box=$("adaNoticeCenter");if(!box)return;box.hidden=!currentUser;if(!currentUser){box.replaceChildren();return}
+ const notices=Array.isArray(content.notices)?content.notices:[];
+ const entries=notices.slice().reverse().map(n=>'<div class="ada-notice-entry"><strong>'+escapeAdaNotice(n.title||"Aviso")+'</strong><p>'+escapeAdaNotice(n.text||"Sem informação adicional.")+'</p></div>');
+ if(String(content.convocation||"").trim())entries.unshift('<div class="ada-notice-entry"><strong>📋 Convocatória atual</strong><p>'+escapeAdaNotice(content.convocation)+'</p></div>');
+ box.innerHTML='<h3>🔔 Centro de comunicações</h3><p class="ada-feature-note">Avisos e convocatória atualmente publicados. As notificações push continuam ativas em separado.</p>'+(entries.length?entries.join(""):'<p class="muted">Sem comunicações publicadas.</p>');
+}
+function escapeAdaNotice(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])).replace(/\n/g,"<br>")}
 function convocationEventId(){
  const raw=[content.convocation||"",...(Array.isArray(content.convocationAthletes)?content.convocationAthletes:[])].join("|").trim();
  if(!raw)return "convocation-main";
@@ -1260,32 +1286,19 @@ async function sendTestPush(){
 }
 
 async function loadCoachAcknowledgements(){
- const box=$("coachAckList");
- if(!box)return;
- if((currentUser?.app_metadata?.role||"parent")!=="coach"){
-   box.innerHTML='<div class="muted">Acesso reservado ao treinador.</div>';
-   return;
- }
+ const box=$("coachAckList"),summary=$("adaCoachAckSummary");if(!box)return;
+ if(currentUser?.app_metadata?.role!=="coach"){box.textContent="Acesso reservado ao treinador.";if(summary)summary.textContent="";return}
+ const athletes=[...new Set((Array.isArray(content.convocationAthletes)?content.convocationAthletes:[]).map(v=>String(v||"").trim()).filter(Boolean))];
+ if(!athletes.length){box.textContent="Sem atletas convocados.";if(summary)summary.textContent="Sem convocatória ativa.";return}
  try{
-  const c=await getClient();
-  const event_id=convocationEventId();
-  const r=await c.from("team_convocation_ack")
-    .select("athlete,user_email,acknowledged,updated_at")
-    .eq("event_id",event_id)
-    .eq("acknowledged",true)
-    .order("updated_at",{ascending:false});
-  if(r.error)throw r.error;
-  const rows=r.data||[];
-  box.innerHTML=rows.length
-    ? rows.map(x=>`<div class="admin-row coach-ack-row">
-        <div><div class="ack-athlete">${x.athlete||"Atleta"}</div><div class="ack-user">${x.user_email||"Utilizador"}</div></div>
-        <div class="ack-date">${x.updated_at?new Date(x.updated_at).toLocaleString("pt-PT",{dateStyle:"short",timeStyle:"short"}):""}</div>
-      </div>`).join("")
-    : '<div class="muted">Ainda não existem confirmações registadas.</div>';
- }catch(e){
-  box.innerHTML='<div class="muted">Não foi possível carregar as confirmações. Verifique a configuração do Supabase.</div>';
- }
+ const c=await getClient(),r=await c.from("team_convocation_ack").select("athlete,user_email,acknowledged,updated_at").eq("event_id",convocationEventId()).eq("acknowledged",true).order("updated_at",{ascending:false});
+ if(r.error)throw r.error;
+ const rows=(r.data||[]).filter(x=>athletes.includes(x.athlete)),confirmed=new Set(rows.map(x=>x.athlete));
+ if(summary)summary.textContent=confirmed.size+" de "+athletes.length+" atletas convocados com leitura confirmada · "+(athletes.length-confirmed.size)+" sem confirmação.";
+ box.innerHTML=athletes.map(name=>{const record=rows.find(x=>x.athlete===name);return '<div class="admin-row coach-ack-row"><div><div class="ack-athlete">'+escapeAdaNotice(name)+'</div><div class="ack-user">'+(record?'✓ Leitura confirmada'+(record.user_email?' · '+escapeAdaNotice(record.user_email):''):'⏳ Sem confirmação de leitura')+'</div></div><div class="ack-date">'+(record?.updated_at?new Date(record.updated_at).toLocaleString("pt-PT",{dateStyle:"short",timeStyle:"short"}):"")+'</div></div>'}).join("");
+ }catch(e){box.textContent="Não foi possível consultar as confirmações.";if(summary)summary.textContent="Resumo indisponível."}
 }
+
 function renderAdmin(){
  const nl=$("adminNoticeList"),gl=$("adminGameList"),tl=$("adminTrainingList");
  if(nl)nl.innerHTML=(content.notices||[]).map((n,i)=>`<div class="admin-row"><span>${n.title||"Aviso"}</span><button data-del-notice="${i}" type="button">Eliminar</button></div>`).join("");
