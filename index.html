@@ -275,7 +275,7 @@ document.addEventListener('click',async function(e){
 <p class="muted">Lista dos atletas cuja confirmação de “Tomei conhecimento” já foi registada.</p>
 <div id="adaCoachAckSummary" class="ada-ack-summary" role="status"></div><div class="admin-list" id="coachAckList"><div class="muted">A carregar…</div></div>
 </div><div class="admin-card"><h3>📋 Convocatória</h3><textarea id="adminConvocation" placeholder="Texto da convocatória"></textarea><label style="display:block;margin-top:12px;font-weight:800">Atletas convocados</label><textarea id="adminConvocationAthletes" placeholder="Um atleta por linha&#10;Ex.: Francisco Oliveira&#10;Tomás Silva&#10;Rodrigo Costa" style="min-height:140px"></textarea><button class="btn" id="adminSaveConvocation" type="button">Guardar convocatória</button><div class="fase3-status" id="coachStatus"></div></div>
-<div class="admin-card"><h3>⚽ Novo jogo</h3><input id="adminGameDate" placeholder="DD/MM/AAAA"><input id="adminGameOpponent" placeholder="Adversário"><input id="adminGameTime" placeholder="11:30"><input id="adminGamePlace" placeholder="Local"><select id="adminGameType"><option>Jogo</option><option>Torneio</option><option>Campeonato</option></select><select id="adminGameHome"><option value="C">Casa</option><option value="F">Fora</option></select><input id="adminGameDescription" placeholder="Descrição"><button class="btn" id="adminAddGame" type="button">Adicionar jogo</button><div class="admin-list" id="adminGameList"></div></div>
+<div class="admin-card"><h3>⚽ Novo jogo</h3><input id="adminGameDate" placeholder="DD/MM/AAAA"><input id="adminGameOpponent" placeholder="Adversário"><input id="adminGameTime" placeholder="11:30"><input id="adminGamePlace" placeholder="Local"><select id="adminGameType"><option>Jogo</option><option>Torneio</option><option>Campeonato</option></select><select id="adminGameHome"><option value="C">Casa</option><option value="F">Fora</option></select><input id="adminGameConcentration" placeholder="Concentração (ex.: 09:15, entrada do campo)"><input id="adminGameDescription" placeholder="Descrição / indicações"><button class="btn" id="adminAddGame" type="button">Adicionar jogo</button><div class="admin-list" id="adminGameList"></div></div>
 <div class="admin-card"><h3>🏃 Novo treino</h3><input id="adminTrainingDate" placeholder="DD/MM/AAAA"><input id="adminTrainingTime" placeholder="18:00–19:30"><input id="adminTrainingPlace" placeholder="Local"><input id="adminTrainingDescription" placeholder="Descrição"><button class="btn" id="adminAddTraining" type="button">Adicionar treino</button><div class="admin-list" id="adminTrainingList"></div></div>
 <div class="admin-card"><h3>🚫 Cancelar treino</h3><p class="muted">Indica a data do treino a cancelar. O calendário assinala-a a vermelho após guardares as alterações.</p><input id="adminCancelTrainingDate" placeholder="DD/MM/AAAA"><button class="btn" id="adminCancelTraining" type="button">Marcar como cancelado</button><div class="admin-list" id="adminCanceledTrainingList"></div></div>
 </div>
@@ -521,6 +521,7 @@ document.addEventListener('click',async function(e){
     time: j.hora,
     place: `${j.casaFora === 'C' ? 'Casa · ' : 'Fora · '}${j.local}`,
     description: j.descricao || '—',
+    concentracao: j.concentracao || "",
     adversario: j.adversario,
     casaFora: j.casaFora,
     tipo: j.tipo,
@@ -1007,7 +1008,7 @@ async function getClient(){
  throw new Error("Supabase não configurado.")
 }
 function normalizeGames(arr){
- return (Array.isArray(arr)?arr:[]).map(j=>({date:(j.date||j.data||"").includes("/")?(j.date||j.data).split("/").reverse().join("-"):(j.date||j.data||""),activity:j.activity||`${j.tipo||"Jogo"} · ${j.adversario||""}`,time:j.time||j.hora||"A confirmar",place:j.place||j.local||"",description:j.description||j.descricao||"—",adversario:j.adversario||"",casaFora:j.casaFora||"C",tipo:j.tipo||"Jogo",filterType:(j.tipo||"jogo").toLowerCase()})).filter(x=>x.date)}
+ return (Array.isArray(arr)?arr:[]).map(j=>({date:(j.date||j.data||"").includes("/")?(j.date||j.data).split("/").reverse().join("-"):(j.date||j.data||""),activity:j.activity||`${j.tipo||"Jogo"} · ${j.adversario||""}`,time:j.time||j.hora||"A confirmar",place:j.place||j.local||"",description:j.description||j.descricao||"—",concentracao:j.concentracao||j.concentration||"",adversario:j.adversario||"",casaFora:j.casaFora||"C",tipo:j.tipo||"Jogo",filterType:(j.tipo||"jogo").toLowerCase()})).filter(x=>x.date)}
 function publicContent(x){
  content=Object.assign({notices:[],games:[],trainings:[],cancelledTrainings:[],convocation:"",convocationAthletes:[]},x||{}); window.__teamContent=content; window.__remoteCanceledTrainings=content.cancelledTrainings||[];
  // Preserve the built-in calendar fixtures if no online games have been configured yet.
@@ -1329,7 +1330,7 @@ document.addEventListener("click",async e=>{
  // Push: handled by dedicated button listeners.
 // Push: handled by dedicated button listeners.
  if(e.target.id==="adminAddNotice"){content.notices=content.notices||[];content.notices.unshift({title:$("adminNoticeTitle").value.trim(),type:$("adminNoticeType").value,text:$("adminNoticeText").value.trim()});$("adminNoticeTitle").value="";$("adminNoticeText").value="";renderAdmin()}
- if(e.target.id==="adminAddGame"){content.games=content.games||[];content.games.push({data:$("adminGameDate").value.trim(),adversario:$("adminGameOpponent").value.trim(),hora:$("adminGameTime").value.trim(),local:$("adminGamePlace").value.trim(),tipo:$("adminGameType").value,casaFora:$("adminGameHome").value,descricao:$("adminGameDescription").value.trim()});renderAdmin()}
+ if(e.target.id==="adminAddGame"){content.games=content.games||[];content.games.push({data:$("adminGameDate").value.trim(),adversario:$("adminGameOpponent").value.trim(),hora:$("adminGameTime").value.trim(),local:$("adminGamePlace").value.trim(),tipo:$("adminGameType").value,casaFora:$("adminGameHome").value,descricao:$("adminGameDescription").value.trim(),concentracao:$("adminGameConcentration").value.trim()});renderAdmin()}
  if(e.target.id==="adminAddTraining"){content.trainings=content.trainings||[];content.trainings.push({data:$("adminTrainingDate").value.trim(),hora:$("adminTrainingTime").value.trim(),local:$("adminTrainingPlace").value.trim(),descricao:$("adminTrainingDescription").value.trim()});renderAdmin()}
  const cancelBtn=e.target.closest?.("#adminCancelTraining");
  if(cancelBtn){
