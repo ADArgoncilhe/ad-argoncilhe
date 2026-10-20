@@ -43,6 +43,9 @@ for(const g of games.filter(j=>String(j.tipo||j.filterType||'').trim().toLocaleL
  if(check.getUTCFullYear()!==year||check.getUTCMonth()!==month-1||check.getUTCDate()!==day)continue;
  const dateCompact=date.replace(/-/g,'');
  const opponent=String(g.adversario||'Adversário a confirmar');
+ const venue=String(g.casaFora||'').trim().toUpperCase();
+ const away=venue==='F'||venue==='FORA'||(!venue&&/^Fora\s*·/i.test(String(g.place||'')));
+ const summary=away?opponent+' · AD Argoncilhe':'AD Argoncilhe · '+opponent;
  const place=String(g.place||g.local||'').replace(/^(Casa · |Fora · )/,'');
  const tipo=String(g.tipo||'Jogo');
  const rawTime=String(g.time||g.hora||'');
@@ -61,10 +64,11 @@ for(const g of games.filter(j=>String(j.tipo||j.filterType||'').trim().toLocaleL
  const uid=crypto.createHash('sha256').update(identity+'|'+occurrence).digest('hex').slice(0,24)+'@adargoncilhe.github.io';
  const suffix=timed?';TZID=Europe/Lisbon':';VALUE=DATE';
  const description=[tipo,g.description||g.descricao||''].filter(Boolean).join(' — ');
- events.push(['BEGIN:VEVENT','UID:'+uid,'DTSTAMP:'+compact(new Date(rows[0].updated_at||Date.now())),'DTSTART'+suffix+':'+start,'DTEND'+suffix+':'+end,'SUMMARY:'+escape('AD Argoncilhe · '+opponent),'LOCATION:'+escape(place),'DESCRIPTION:'+escape(description),'URL:https://adargoncilhe.github.io/ad-argoncilhe/','END:VEVENT'].join('\r\n'));
+ events.push(['BEGIN:VEVENT','UID:'+uid,'DTSTAMP:'+compact(new Date(Math.max(new Date(rows[0].updated_at||Date.now()).getTime(),Date.parse('2026-10-20T03:30:00Z')))),'DTSTART'+suffix+':'+start,'DTEND'+suffix+':'+end,'SUMMARY:'+escape(summary),'LOCATION:'+escape(place),'DESCRIPTION:'+escape(description),'URL:https://adargoncilhe.github.io/ad-argoncilhe/','END:VEVENT'].join('\r\n'));
 }
 const calendar=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//AD Argoncilhe//Jogos Sub10//PT','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:AD Argoncilhe Sub-10 - Jogos','X-WR-TIMEZONE:Europe/Lisbon','REFRESH-INTERVAL;VALUE=DURATION:PT1H','X-PUBLISHED-TTL:PT1H',...events,'END:VCALENDAR'].join('\r\n')+'\r\n';
 fs.writeFileSync('jogos.ics',calendar,'utf8');
 console.log('Published '+events.length+' public matches');
 
 })().catch(error=>{console.error(error);process.exitCode=1});
+

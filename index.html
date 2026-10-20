@@ -549,7 +549,10 @@ document.addEventListener('click',async function(e){
   const end=timed?new Date(new Date(g.date+"T"+time[1].padStart(2,"0")+":"+time[2]+":00").getTime()+2*3600000):new Date(g.date+"T12:00:00");
   const endKey=timed?[end.getFullYear(),String(end.getMonth()+1).padStart(2,"0"),String(end.getDate()).padStart(2,"0")].join("")+"T"+String(end.getHours()).padStart(2,"0")+String(end.getMinutes()).padStart(2,"0")+"00":[new Date(end.getTime()+86400000).getFullYear(),String(new Date(end.getTime()+86400000).getMonth()+1).padStart(2,"0"),String(new Date(end.getTime()+86400000).getDate()).padStart(2,"0")].join("");
   const suffix=timed?";TZID=Europe/Lisbon":";VALUE=DATE";
-  const summary="AD Argoncilhe - "+(g.adversario||g.activity||"Jogo");
+  const opponent=g.adversario||g.activity||"Jogo";
+  const venue=String(g.casaFora||"").trim().toUpperCase();
+  const away=venue==="F"||venue==="FORA"||(!venue&&/^Fora\s*·/i.test(String(g.place||"")));
+  const summary=away?opponent+" - AD Argoncilhe":"AD Argoncilhe - "+opponent;
   return ["BEGIN:VEVENT","UID:ada-"+date+"-"+i+"@adargoncilhe.github.io","DTSTAMP:"+new Date().toISOString().replace(/[-:]/g,"").replace(/\.\d{3}/,""),"DTSTART"+suffix+":"+start,"DTEND"+suffix+":"+endKey,"SUMMARY:"+escapeText(summary),"LOCATION:"+escapeText(g.place||""),"DESCRIPTION:"+escapeText(g.description||""),"END:VEVENT"].join("\r\n");
  });
  const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//AD Argoncilhe//Jogos Sub10//PT","CALSCALE:GREGORIAN","X-WR-CALNAME:ADA Sub-10 - Jogos",...events,"END:VCALENDAR"].join("\r\n")+"\r\n";
@@ -1494,3 +1497,4 @@ if((currentUser?.app_metadata?.role||"parent")==="coach") {
 </script>
 
 </body></html>
+
