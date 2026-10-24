@@ -284,6 +284,8 @@ document.addEventListener('click',async function(e){
 <footer class="footer"><div class="wrap"><strong>AD Argoncilhe · Equipa Sub-10 2026/27</strong><br><span class="small">Página informativa para pais e atletas.</span></div></footer>
 <script>
 (async()=>{
+  window.adaNoticeExpired=(n,now=new Date())=>!!n.expiresOn&&n.expiresOn<new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Lisbon',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
+  window.adaActiveNotices=(rows,now=new Date())=>(Array.isArray(rows)?rows:[]).filter(n=>!n.archived&&!window.adaNoticeExpired(n,now)).slice().sort((a,b)=>Number(!!b.pinned)-Number(!!a.pinned));
   const seasonStart = new Date(2026,7,25); // 25/08/2026
   const seasonEnd = new Date(2027,5,30);   // 30/06/2027
 
@@ -573,8 +575,9 @@ function renderParentNextGames(){
 }
 function adaEscape(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function adaParentFeatures(){
+ ensureParentHome();
  const match=document.getElementById("adaMatchDetail"),agenda=document.getElementById("adaWeekAgenda");if(!match||!agenda)return;
- const logged=!!window.__adaParentLoggedIn;match.hidden=agenda.hidden=!logged;if(!logged){match.replaceChildren();agenda.replaceChildren();return}
+ const logged=!!window.__adaParentLoggedIn;match.hidden=agenda.hidden=!logged;document.getElementById('adaParentHome').hidden=!logged;document.body.classList.toggle('ada-parent-session',logged);if(!logged){match.replaceChildren();agenda.replaceChildren();document.getElementById('adaNextCommitment').replaceChildren();return}
  const today=new Date(),key=localDateKey(today);
  const next=games.filter(g=>/^\d{4}-\d{2}-\d{2}$/.test(g.date)&&g.date>=key).sort((a,b)=>a.date.localeCompare(b.date)||String(a.time||"").localeCompare(String(b.time||"")))[0];
  if(next){
@@ -584,9 +587,24 @@ function adaParentFeatures(){
  const events=[];
  for(let n=0;n<7;n++){const d=new Date(today.getFullYear(),today.getMonth(),today.getDate()+n),day=localDateKey(d);getCalendarItems(d.getFullYear(),d.getMonth()).filter(x=>x.date===day).forEach(x=>events.push(x))}
  events.sort((a,b)=>a.date.localeCompare(b.date)||String(a.time||"").localeCompare(String(b.time||"")));
+ const nowMinutes=today.getHours()*60+today.getMinutes();
+ const nextEvent=events.find(e=>{if(e.isCanceled)return false;if(e.date!==key)return true;const times=String(e.time||'').match(/\d{1,2}:\d{2}/g);if(!times)return true;const [h,m]=times[times.length-1].split(':').map(Number);return h*60+m+(times.length===1?120:0)>nowMinutes});
+ const brief=document.getElementById('adaNextCommitment');
+ brief.innerHTML=nextEvent?'<span class="eyebrow">Próximo compromisso</span><h2>'+adaEscape(String(nextEvent.activity||'Atividade').replace(/<[^>]*>/g,''))+'</h2><p>'+adaEscape(nextEvent.date.split('-').reverse().join('/'))+' · <strong>'+adaEscape(nextEvent.time||'Hora a confirmar')+'</strong></p><p>'+adaEscape(nextEvent.place||'Local a confirmar')+'</p><a class="private-btn" href="#adaWeekAgenda">Ver agenda da semana</a>':'<h2>A tua semana</h2><p>Sem compromissos futuros nos próximos 7 dias.</p>';
+ const commitmentGame=nextEvent&&games.find(g=>g.date===nextEvent.date&&g.activity===nextEvent.activity);
+ if(commitmentGame){brief.insertAdjacentHTML('beforeend','<p><strong>Concentração:</strong> '+adaEscape(commitmentGame.concentracao||commitmentGame.concentration||'Consultar indicações do treinador')+'</p>')}
  agenda.innerHTML='<h3>🗓️ Agenda dos próximos 7 dias</h3>'+(events.length?events.map(e=>'<div class="ada-agenda-line"><strong>'+adaEscape(e.date.split("-").reverse().join("/"))+'</strong><div><strong>'+adaEscape(String(e.activity||"Atividade").replace(/<[^>]*>/g,""))+'</strong><div class="muted">'+adaEscape(e.isCanceled?"Cancelado":e.time||"Hora a confirmar")+' · '+adaEscape(e.place||"Local a confirmar")+'</div></div></div>').join(""):'<p class="muted">Não existem atividades nos próximos 7 dias.</p>');
 }
 window.__adaParentFeatures=adaParentFeatures;
+function ensureParentHome(){
+ if(document.getElementById('adaParentHome'))return;
+ const home=document.createElement('section');home.id='adaParentHome';home.hidden=true;
+ home.innerHTML='<div class="wrap"><div class="ada-parent-home-grid"><div class="ada-parent-feature" id="adaNextCommitment"></div><div class="ada-parent-feature"><h3>Área dos Pais</h3><p>Consulta a convocatória e confirma a leitura junto do nome do atleta.</p><a class="private-btn" href="#gamesContent">Ver convocatória</a><a class="private-btn" href="#adaNoticeCenter">Comunicações</a></div></div><div id="adaHomeAgenda"></div><details class="ada-parent-feature"><summary>Ficha completa do próximo jogo</summary><div id="adaHomeMatch"></div></details><details class="ada-parent-feature"><summary>Próximos jogos</summary><div id="adaHomeGames"></div></details></div>';
+ document.querySelector('.hero').after(home);
+ document.getElementById('adaHomeAgenda').append(document.getElementById('adaWeekAgenda'));
+ document.getElementById('adaHomeMatch').append(document.getElementById('adaMatchDetail'));
+ document.getElementById('adaHomeGames').append(document.getElementById('adaParentNextGames'));
+}
 window.__adaRenderParentNextGames=renderParentNextGames;
 function renderGamesArea(){
     const todayKey = localDateKey(new Date());
@@ -887,8 +905,8 @@ const players = [
   function renderNotices(notices, showText=false){
     const box=document.getElementById('noticesList');
     if(!box) return;
-    const rows=Array.isArray(notices)?notices:[];
-    box.innerHTML=rows.length ? rows.map(n=>`<div class="notice">${n.type ? `<span class="notice-type">${escapeHtml(n.type)}</span>` : ''}<strong>${escapeHtml(n.title || 'Aviso')}</strong>${showText && n.text ? `<br><span class="muted notice-body">${escapeHtml(n.text).replace(/\n/g,'<br>')}</span>` : ''}</div>`).join('') : '<div class="notice"><strong>Não existem avisos publicados.</strong></div>';
+    const rows=window.adaActiveNotices(notices);
+    box.innerHTML=rows.length ? rows.map(n=>`<div class="notice">${n.pinned?'<span class="notice-type">📌 Fixado</span>':''}${n.type ? `<span class="notice-type">${escapeHtml(n.type)}</span>` : ''}<strong>${escapeHtml(n.title || 'Aviso')}</strong>${showText && n.text ? `<br><span class="muted notice-body">${escapeHtml(n.text).replace(/\n/g,'<br>')}</span>` : ''}</div>`).join('') : '<div class="notice"><strong>Não existem avisos publicados.</strong></div>';
   }
   function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[ch]||ch));}
   window.renderNotices = renderNotices;
@@ -980,7 +998,7 @@ if ('serviceWorker' in navigator) {
   // A new service worker takes control without forcing a reload while forms are open.
   window.addEventListener('load', async()=>{
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=20261024-v28-edit-save',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=20261024-v28-home-notices',{updateViaCache:'none'});
       await reg.update();
     }catch(e){console.warn('Service Worker:',e)}
   });
@@ -1002,8 +1020,9 @@ let client=null, content={notices:[],games:[],trainings:[],convocation:"",convoc
 let lastPublishedContent=null;
 let saving=false, formDirty=false, previousVersion=null, loadedRevision=null;
 let editingGame=-1, editingTraining=-1;
+let editingNotice=-1;
 const copy=v=>JSON.parse(JSON.stringify(v));
-function pendingForms(){return ['adminGameDate','adminGameTime','adminGamePlace','adminGameOpponent','adminGameDescription','adminGameConcentration','adminTrainingDate','adminTrainingTime','adminTrainingPlace','adminTrainingDescription','adminNoticeTitle','adminNoticeText'].some(id=>document.getElementById(id)?.value.trim())}
+function pendingForms(){return ['adminGameDate','adminGameTime','adminGamePlace','adminGameOpponent','adminGameDescription','adminGameConcentration','adminTrainingDate','adminTrainingTime','adminTrainingPlace','adminTrainingDescription','adminNoticeTitle','adminNoticeText','adaNoticeExpiry'].some(id=>document.getElementById(id)?.value.trim())||!!document.getElementById('adaNoticePinned')?.checked}
 function hasDraft(){return formDirty||currentUser?.app_metadata?.role==='coach'&&pendingForms()||!!lastPublishedContent&&JSON.stringify(content)!==JSON.stringify(lastPublishedContent)}
 function draftStatus(){setStatus('adaSaveState',saving?'A guardar…':hasDraft()?'Alterações por guardar':'Sem alterações pendentes')}
 window.addEventListener('beforeunload',e=>{if(hasDraft()){e.preventDefault();e.returnValue=''}});
@@ -1040,8 +1059,10 @@ function publicContent(x){
 function renderAdaNoticeCenter(){
  const box=$("adaNoticeCenter");if(!box)return;box.hidden=!currentUser;if(!currentUser){box.replaceChildren();return}
  const changes=(content.scheduleChanges||[]).filter(x=>Date.now()-Date.parse(x.at)<7*86400000).map(x=>({title:'Alteração · '+x.title+' · '+x.date.split('-').reverse().join('/'),text:x.differences.map(d=>d.label+': '+d.before+' → '+d.after).join('\n')}));
- const notices=[...(Array.isArray(content.notices)?content.notices:[]),...changes.reverse()];
- const entries=notices.slice().reverse().map(n=>'<div class="ada-notice-entry"><strong>'+escapeAdaNotice(n.title||"Aviso")+'</strong><p>'+escapeAdaNotice(n.text||"Sem informação adicional.")+'</p></div>');
+ const notices=[...window.adaActiveNotices(content.notices),...changes.reverse()];
+ const entries=notices.map(n=>'<div class="ada-notice-entry"><strong>'+(n.pinned?'📌 ':'')+escapeAdaNotice(n.title||"Aviso")+'</strong><p>'+escapeAdaNotice(n.text||"Sem informação adicional.")+'</p></div>');
+ const archived=(content.notices||[]).filter(n=>n.archived||window.adaNoticeExpired(n));
+ if(archived.length)entries.push('<details><summary>Histórico de avisos ('+archived.length+')</summary>'+archived.map(n=>'<div class="ada-notice-entry"><strong>'+escapeAdaNotice(n.title||'Aviso')+'</strong><p>'+escapeAdaNotice(n.text||'')+'</p></div>').join('')+'</details>');
  if(String(content.convocation||"").trim())entries.unshift('<div class="ada-notice-entry"><strong>📋 Convocatória atual</strong><p>'+escapeAdaNotice(content.convocation)+'</p></div>');
  box.innerHTML='<h3>🔔 Centro de comunicações</h3><p class="ada-feature-note">Avisos e convocatória atualmente publicados. As notificações push continuam ativas em separado.</p>'+(entries.length?entries.join(""):'<p class="muted">Sem comunicações publicadas.</p>');
 }
@@ -1218,7 +1239,7 @@ function showCoach(){
 async function save(){
  if(saving)return false;
  if(currentUser?.app_metadata?.role!=='coach')return false;
- if(editingGame>=0||editingTraining>=0){setStatus('adminSaveStatus','Termine ou cancele a edição antes de publicar.');return false}
+ if(editingGame>=0||editingTraining>=0||editingNotice>=0||pendingForms()){setStatus('adminSaveStatus','Termine, adicione ou cancele os formulários antes de publicar.');return false}
  saving=true;draftStatus();
  const panel=$('gestao-equipa');const controls=[...panel.querySelectorAll('input,textarea,select,button')];
  const disabled=controls.map(x=>x.disabled);controls.forEach(x=>x.disabled=true);
@@ -1343,7 +1364,7 @@ async function loadCoachAcknowledgements(){
 function renderAdmin(){
  ensureEditorTools();
  const nl=$("adminNoticeList"),gl=$("adminGameList"),tl=$("adminTrainingList");
- if(nl)nl.innerHTML=(content.notices||[]).map((n,i)=>`<div class="admin-row"><span>${n.title||"Aviso"}</span><button data-del-notice="${i}" type="button">Eliminar</button></div>`).join("");
+ if(nl)nl.innerHTML=(content.notices||[]).map((n,i)=>`<div class="admin-row"><span>${n.pinned?'📌 ':''}${escapeAdaNotice(n.title||"Aviso")}<small style="display:block">${n.archived?'Arquivado':window.adaNoticeExpired(n)?'Expirado':n.expiresOn?'Visível até '+escapeAdaNotice(n.expiresOn.split('-').reverse().join('/')):'Sem prazo de validade'}</small></span><button data-edit-notice="${i}" type="button">Editar</button><button data-archive-notice="${i}" type="button">${n.archived||window.adaNoticeExpired(n)?'Reativar':'Arquivar'}</button><button data-del-notice="${i}" type="button">Eliminar</button></div>`).join("");
  if(gl)gl.innerHTML=(content.games||[]).map((g,i)=>`<div class="admin-row"><span>${escapeAdaNotice(g.date||g.data)} · ${escapeAdaNotice(g.adversario||g.opponent||"Jogo")} · ${escapeAdaNotice(g.time||g.hora||'')}</span><button data-del-game="${i}" type="button">Eliminar</button></div>`).join("");
  if(tl)tl.innerHTML=(content.trainings||[]).map((t,i)=>`<div class="admin-row"><span>${escapeAdaNotice(t.date||t.data)} · ${escapeAdaNotice(t.time||t.hora||"")}</span><button data-del-training="${i}" type="button">Eliminar</button></div>`).join("");
  const cl=$("adminCanceledTrainingList"); if(cl)cl.innerHTML=(content.cancelledTrainings||[]).map((d,i)=>`<div class="admin-row"><span>${d}</span><button data-del-cancelled-training="${i}" type="button">Repor</button></div>`).join("");
@@ -1354,6 +1375,8 @@ function renderAdmin(){
 }
 function ensureEditorTools(){
  if($('adaSaveState'))return;
+ const options=document.createElement('div');options.innerHTML='<label for="adaNoticeExpiry">Visível até (inclusive; vazio = sem prazo)</label><input type="date" id="adaNoticeExpiry"><label style="display:flex;gap:10px;align-items:center"><input type="checkbox" id="adaNoticePinned" style="width:auto">Fixar no topo</label><button type="button" id="adaCancelNotice" hidden>Cancelar edição</button>';
+ $('adminAddNotice').before(options);$('adminAddNotice').textContent='Adicionar aviso ao rascunho';
  const bar=document.createElement('div');bar.className='admin-card';
  bar.innerHTML='<strong id="adaSaveState" role="status" aria-live="polite"></strong><p>As alterações só ficam disponíveis para os pais depois de guardar.</p><button type="button" id="adaRestorePrevious" disabled>Recuperar gravação anterior desta sessão</button>';
  $('gestao-equipa').prepend(bar);
@@ -1412,6 +1435,11 @@ document.addEventListener('input',e=>{
 });
 document.addEventListener('click',e=>{
  const b=e.target.closest('button');if(!b)return;
+ if(b.hasAttribute('data-edit-notice')){e.stopImmediatePropagation();if(editingNotice>=0&&!confirm('Descartar a edição deste aviso?'))return;editingNotice=+b.dataset.editNotice;const n=content.notices[editingNotice];$('adminNoticeTitle').value=n.title||'';$('adminNoticeText').value=n.text||'';$('adminNoticeType').value=n.type||'Informação';$('adaNoticeExpiry').value=n.expiresOn||'';$('adaNoticePinned').checked=!!n.pinned;$('adaCancelNotice').hidden=false;$('adminAddNotice').textContent='Aplicar edição do aviso';formDirty=true;draftStatus();$('adminNoticeTitle').focus();return}
+ if(b.id==='adaCancelNotice'){e.stopImmediatePropagation();resetNoticeEditor();draftStatus();return}
+ if(b.hasAttribute('data-archive-notice')){e.stopImmediatePropagation();if(editingNotice>=0){setStatus('adminSaveStatus','Termine a edição do aviso primeiro.');return}const n=content.notices[+b.dataset.archiveNotice];if(n.archived||window.adaNoticeExpired(n)){n.archived=false;n.expiresOn=''}else n.archived=true;renderAdmin();return}
+ if(b.hasAttribute('data-del-notice')&&editingNotice>=0){e.stopImmediatePropagation();setStatus('adminSaveStatus','Termine a edição do aviso primeiro.');return}
+ if(b.id==='adminAddNotice'){e.stopImmediatePropagation();const title=$('adminNoticeTitle').value.trim(),text=$('adminNoticeText').value.trim();if(!title||!text){setStatus('adminSaveStatus','Preencha o título e o texto do aviso.');return}const old=editingNotice>=0?content.notices[editingNotice]:{};const n={...old,title,text,type:$('adminNoticeType').value,expiresOn:$('adaNoticeExpiry').value,pinned:$('adaNoticePinned').checked};if(window.adaNoticeExpired(n)){setStatus('adminSaveStatus','Escolha uma validade igual ou posterior a hoje.');return}content.notices=content.notices||[];if(editingNotice>=0)content.notices[editingNotice]=n;else content.notices.unshift(n);resetNoticeEditor();renderAdmin();setStatus('adminSaveStatus','Aviso preparado. Clique em Guardar tudo para publicar.');return}
  if((b.id==='coachLogout'||b.id==='parentLogout'||b.id==='refreshApp')&&hasDraft()&&!confirm('Existem alterações por guardar. Sair e descartá-las?')){e.preventDefault();e.stopImmediatePropagation();return}
  if(saving&&b.closest('#gestao-equipa')){e.stopImmediatePropagation();return}
  if((editingGame>=0||editingTraining>=0)&&(b.hasAttribute('data-del-game')||b.hasAttribute('data-del-training'))){e.stopImmediatePropagation();setStatus('adminSaveStatus','Termine ou cancele a edição antes de eliminar um registo.');return}
@@ -1425,6 +1453,8 @@ document.addEventListener('click',e=>{
  if(b.id==='adminSaveAll'&&pendingForms()){e.stopImmediatePropagation();setStatus('adminSaveStatus','Adicione ou cancele os formulários preenchidos antes de guardar tudo.');return}
  if(b.closest('[id^="admin"]')||b.hasAttribute('data-del-game')||b.hasAttribute('data-del-training')||b.hasAttribute('data-del-notice'))setTimeout(draftStatus,0);
 },true);
+function resetNoticeEditor(){editingNotice=-1;$('adminNoticeTitle').value='';$('adminNoticeText').value='';$('adaNoticeExpiry').value='';$('adaNoticePinned').checked=false;$('adaCancelNotice').hidden=true;$('adminAddNotice').textContent='Adicionar aviso ao rascunho';formDirty=false}
+setInterval(()=>{if(!saving&&!hasDraft()){window.renderNotices?.(content.notices||[],!!currentUser);renderAdaNoticeCenter();window.__adaParentFeatures?.()}},60000);
 document.addEventListener("click",async e=>{
  if(e.target.closest("[data-open-password]")){e.preventDefault();openLogin()}
  if(e.target.id==="fase3Cancel")closeLogin();
@@ -1436,7 +1466,7 @@ document.addEventListener("click",async e=>{
 }
  if(e.target.id==="coachLogout"||e.target.id==="parentLogout"){
   try{await (await getClient()).auth.signOut()}catch(err){console.warn(err)}
-  currentUser=null;formDirty=false;previousVersion=null;editingGame=-1;editingTraining=-1;if(lastPublishedContent)publicContent(copy(lastPublishedContent));hideParentSession();sessionStorage.removeItem("ad_argoncilhe_auth");
+  currentUser=null;formDirty=false;previousVersion=null;editingGame=-1;editingTraining=-1;if($('adaNoticeExpiry'))resetNoticeEditor();if(lastPublishedContent)publicContent(copy(lastPublishedContent));hideParentSession();sessionStorage.removeItem("ad_argoncilhe_auth");
   document.querySelectorAll(".private-hidden-content").forEach(x=>x.classList.add("private-hidden-content"));
   document.querySelectorAll(".private-guard").forEach(x=>x.classList.remove("hidden"));
   $("gestao-equipa")?.classList.remove("show");
@@ -1618,6 +1648,18 @@ if((currentUser?.app_metadata?.role||"parent")==="coach") {
 #gestao-equipa button:disabled{opacity:.55;cursor:wait}
 #gestao-equipa input[type=date]{color-scheme:dark}
 </style>
+<style>
+#adaParentHome[hidden]{display:none!important}
+.ada-parent-session .hero .season{display:none!important}
+.ada-parent-session .hero{padding-bottom:8px}
+.ada-parent-home-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+.ada-parent-home-grid .private-btn{display:inline-block;margin:6px 8px 0 0}
+#adaParentHome summary{cursor:pointer;font-weight:700;padding:6px 0}
+#adaParentHome details .ada-parent-feature,#adaParentHome details .ada-parent-next-games{border:0;margin:0;padding:12px 0}
+#adaNoticeExpiry{color-scheme:dark}
+@media(max-width:680px){.ada-parent-home-grid{grid-template-columns:1fr;gap:0}#adaParentHome .ada-parent-feature{margin:8px 0}.ada-parent-session .hero h1{font-size:28px}}
+</style>
 </body></html>
+
 
 
