@@ -1012,7 +1012,7 @@ if ('serviceWorker' in navigator) {
   // A new service worker takes control without forcing a reload while forms are open.
   window.addEventListener('load', async()=>{
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=20261025-v28-roster-persist-fix',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=20261025-v28-convocation-expiry',{updateViaCache:'none'});
       await reg.update();
     }catch(e){console.warn('Service Worker:',e)}
   });
@@ -1065,7 +1065,7 @@ function publicContent(x){
  // Preserve the built-in calendar fixtures if no online games have been configured yet.
  if(Array.isArray(content.games) && content.games.length){window.__adaSetGames?.(normalizeGames(content.games));}
  try{window.__adaRefresh?.()}catch(e){console.error('Erro ao atualizar calendário:',e)}
- const d=document.getElementById("convocationText"); if(d)d.textContent=content.convocation||"Ainda não foi publicada uma convocatória.";
+ renderConvocationText();
  try{window.renderNotices(content.notices||[], !!currentUser)}catch(e){console.error('Erro nos avisos:',e)}
  renderConvocationAthletes();
  renderAdaNoticeCenter();
@@ -1077,10 +1077,42 @@ function renderAdaNoticeCenter(){
  const entries=notices.map(n=>'<div class="ada-notice-entry"><strong>'+(n.pinned?'📌 ':'')+escapeAdaNotice(n.title||"Aviso")+'</strong><p>'+escapeAdaNotice(n.text||"Sem informação adicional.")+'</p></div>');
  const archived=(content.notices||[]).filter(n=>n.archived||window.adaNoticeExpired(n));
  if(archived.length)entries.push('<details><summary>Histórico de avisos ('+archived.length+')</summary>'+archived.map(n=>'<div class="ada-notice-entry"><strong>'+escapeAdaNotice(n.title||'Aviso')+'</strong><p>'+escapeAdaNotice(n.text||'')+'</p></div>').join('')+'</details>');
- if(String(content.convocation||"").trim())entries.unshift('<div class="ada-notice-entry"><strong>📋 Convocatória atual</strong><p>'+escapeAdaNotice(content.convocation)+'</p></div>');
+ if(!convocationExpired(content)&&String(content.convocation||"").trim())entries.unshift('<div class="ada-notice-entry"><strong>📋 Convocatória atual</strong><p>'+escapeAdaNotice(content.convocation)+'</p></div>');
  box.innerHTML='<h3>🔔 Centro de comunicações</h3><p class="ada-feature-note">Avisos e convocatória atualmente publicados. As notificações push continuam ativas em separado.</p>'+(entries.length?entries.join(""):'<p class="muted">Sem comunicações publicadas.</p>');
 }
 function escapeAdaNotice(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])).replace(/\n/g,"<br>")}
+function lisbonMinute(now=Date.now()){return new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Lisbon',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(now)).replace(' ','T')}
+function gameExpiry(g){
+ const date=dateISO(g?.date||g?.data),times=String(g?.time||g?.hora||'').match(/\d{1,2}:\d{2}/g);
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return '';
+ if(!times?.length)return date+'T23:59';
+ const [h,m]=(times[1]||times[0]).split(':').map(Number);
+ const d=new Date(date+'T00:00:00Z');d.setUTCMinutes(h*60+m+(times[1]?0:120));return d.toISOString().slice(0,16);
+}
+function convocationExpiry(c){
+ if(c.convocationEndsAt)return c.convocationEndsAt;
+ const g=(c.games||[]).find(g=>g.adaMatchKey&&g.adaMatchKey===c.convocationMatchKey);if(g)return gameExpiry(g);
+ // Legacy convocations may only contain a date in their free text.
+ const text=String(c.convocation||''),d=text.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?\b/);
+ if(!d)return '';
+ const year=d[3]||String(c.updated_at||'').slice(0,4);if(!/^\d{4}$/.test(year))return '';
+ const time=text.match(/hora[^\n:]*:\s*(\d{1,2}:\d{2})/i)?.[1];
+ return gameExpiry({date:year+'-'+d[2].padStart(2,'0')+'-'+d[1].padStart(2,'0'),time});
+}
+function convocationExpired(c,now=Date.now()){const end=convocationExpiry(c);return !!end&&lisbonMinute(now)>=end}
+function renderConvocationText(){const d=$('convocationText');if(d)d.textContent=!currentUser?'Entre na Área dos Pais para consultar a convocatória.':convocationExpired(content)?'O jogo anterior terminou. Aguarda a convocatória para o próximo jogo.':content.convocation||'Ainda não foi publicada uma convocatória.'}
+function resetExpiredConvocation(){
+ if(!convocationExpired(content))return false;
+ content.convocation='';content.convocationAthletes=[];delete content.convocationMatchKey;delete content.convocationEndsAt;
+ setStatus('coachStatus','A convocatória anterior terminou. Pode preparar a do próximo jogo.');return true;
+}
+setInterval(()=>{
+ renderConvocationText();renderAdaNoticeCenter();
+ if(convocationExpired(content)){
+  renderConvocationAthletes();
+  if(currentUser?.app_metadata?.role==='coach'&&!saving&&!formDirty&&editingGame<0&&editingTraining<0&&editingNotice<0)renderAdmin();
+ }
+},15000);
 function convocationEventId(){
  const raw=[content.convocation||"",...(Array.isArray(content.convocationAthletes)?content.convocationAthletes:[])].join("|").trim();
  if(!raw)return "convocation-main";
@@ -1109,6 +1141,7 @@ async function loadAcknowledgements(){
 }
 function renderConvocationAthletes(){
  const box=$("convocationAthletes"); if(!box)return;
+ if(convocationExpired(content)){box.replaceChildren();return}
  const arr=Array.isArray(content.convocationAthletes)?content.convocationAthletes.filter(Boolean):[];
  if(!arr.length){box.innerHTML=currentUser?'<div class="muted">O treinador ainda não indicou os atletas convocados.</div>':'';return}
  if(!currentUser){box.innerHTML='<div class="notice-login-hint">Entre na Área dos Pais para indicar que tomou conhecimento da convocatória.</div>';return}
@@ -1116,6 +1149,7 @@ function renderConvocationAthletes(){
  loadAcknowledgements();
 }
 async function acknowledgeAthlete(name,button){
+ if(convocationExpired(content)){renderConvocationAthletes();return}
  if(!currentUser){openLogin();return}
  if(!name||!button)return;
  const wasActive=button.classList.contains("active");
@@ -1254,6 +1288,7 @@ async function save(){
  if(saving)return false;
  if(currentUser?.app_metadata?.role!=='coach')return false;
  if(editingGame>=0||editingTraining>=0||editingNotice>=0||pendingForms()){setStatus('adminSaveStatus','Termine, adicione ou cancele os formulários antes de publicar.');return false}
+ if(String(content.convocation||'').trim()&&!convocationExpiry(content)){setStatus('adminSaveStatus','Indique o fim previsto do jogo na convocatória antes de publicar.');return false}
  saving=true;draftStatus();
  const panel=$('gestao-equipa');const controls=[...panel.querySelectorAll('input,textarea,select,button')];
  const disabled=controls.map(x=>x.disabled);controls.forEach(x=>x.disabled=true);
@@ -1376,6 +1411,7 @@ async function loadCoachAcknowledgements(){
 }
 
 function renderAdmin(){
+ resetExpiredConvocation();
  ensureEditorTools();
  const nl=$("adminNoticeList"),gl=$("adminGameList"),tl=$("adminTrainingList");
  if(nl)nl.innerHTML=(content.notices||[]).map((n,i)=>`<div class="admin-row"><span>${n.pinned?'📌 ':''}${escapeAdaNotice(n.title||"Aviso")}<small style="display:block">${n.archived?'Arquivado':window.adaNoticeExpired(n)?'Expirado':n.expiresOn?'Visível até '+escapeAdaNotice(n.expiresOn.split('-').reverse().join('/')):'Sem prazo de validade'}</small></span><button data-edit-notice="${i}" type="button">Editar</button><button data-archive-notice="${i}" type="button">${n.archived||window.adaNoticeExpired(n)?'Reativar':'Arquivar'}</button><button data-del-notice="${i}" type="button">Eliminar</button></div>`).join("");
@@ -1405,14 +1441,15 @@ function ensureEditorTools(){
 function renderConvocationEditor(){
  if(!$('adaConvocationTools')){
   const tools=document.createElement('div');tools.id='adaConvocationTools';
-  tools.innerHTML='<label for="adaConvocationGame">Jogo da convocatória</label><select id="adaConvocationGame"><option value="">Escolher jogo</option></select><button type="button" id="adaFillConvocation">Preencher dados do jogo</button><p class="muted">Preenche adversário, data, hora, campo e concentração. Pode depois ajustar o texto.</p><fieldset><legend>Selecionar atletas convocados</legend><div id="adaRosterChoices" class="ada-roster-choices"></div></fieldset><p id="adaRosterCount" role="status"></p>';
+  tools.innerHTML='<label for="adaConvocationGame">Jogo da convocatória</label><select id="adaConvocationGame"><option value="">Escolher jogo</option></select><button type="button" id="adaFillConvocation">Preencher dados do jogo</button><p class="muted">Preenche adversário, data, hora, campo e concentração. Pode depois ajustar o texto.</p><label for="adaConvocationEnd">Fim previsto do jogo (hora de Portugal)</label><input type="datetime-local" id="adaConvocationEnd"><p class="muted">A convocatória deixa de aparecer automaticamente nesta hora. Por defeito: início + 2 horas; ajuste se necessário. Sem hora de início, usa o fim do dia.</p><fieldset><legend>Selecionar atletas convocados</legend><div id="adaRosterChoices" class="ada-roster-choices"></div></fieldset><p id="adaRosterCount" role="status"></p>';
   $('adminConvocation').before(tools);
   const manual=document.createElement('details');manual.className='ada-manual-athletes';const summary=document.createElement('summary');summary.textContent='Editar nomes manualmente / adicionar outro atleta';manual.append(summary);$('adminConvocationAthletes').before(manual);manual.append($('adminConvocationAthletes'));
   $('adminSaveConvocation').textContent='Aplicar convocatória ao rascunho';
   const actions=document.createElement('div');actions.className='ada-roster-actions';actions.innerHTML='<button type="button" id="adaRestoreRoster">Repor nomes removidos</button><button type="button" id="adaClearConvocation">Apagar convocatória publicada</button><p class="muted">As alterações aos nomes são publicadas em Guardar tudo. Apagar convocatória grava a remoção imediatamente, após confirmação, e mantém o jogo no calendário.</p>';$('adaRosterCount').after(actions);
  }
+ $('adaConvocationEnd').value=convocationExpiry(content);
  const list=content.games||[],select=$('adaConvocationGame');select.replaceChildren(new Option('Escolher jogo',''));
- list.map((g,i)=>({g,i})).sort((a,b)=>dateISO(a.g.date||a.g.data).localeCompare(dateISO(b.g.date||b.g.data))).forEach(({g,i})=>{const option=new Option(dateISO(g.date||g.data).split('-').reverse().join('/')+' · '+(g.adversario||'Jogo')+' · '+(g.time||g.hora||'A confirmar'),String(i));select.add(option);if(g.adaMatchKey&&g.adaMatchKey===content.convocationMatchKey)option.selected=true});
+ list.map((g,i)=>({g,i})).filter(({g})=>!gameExpiry(g)||gameExpiry(g)>lisbonMinute()).sort((a,b)=>dateISO(a.g.date||a.g.data).localeCompare(dateISO(b.g.date||b.g.data))).forEach(({g,i})=>{const option=new Option(dateISO(g.date||g.data).split('-').reverse().join('/')+' · '+(g.adversario||'Jogo')+' · '+(g.time||g.hora||'A confirmar'),String(i));select.add(option);if(g.adaMatchKey&&g.adaMatchKey===content.convocationMatchKey)option.selected=true});
  renderRosterChoices();
  if(content.convocationMatchKey&&!list.some(g=>g.adaMatchKey===content.convocationMatchKey))setStatus('coachStatus','O jogo associado já não está na agenda. Reveja a convocatória antes de publicar.');
 }
@@ -1439,6 +1476,7 @@ function fillConvocationFromGame(){
  if(String(content.convocation||'').trim()&&!confirm('Substituir o texto da convocatória pelos dados deste jogo? A seleção de atletas será mantida.'))return;
  if(!g.adaMatchKey)g.adaMatchKey=crypto.randomUUID();
  content.convocationMatchKey=g.adaMatchKey;
+ content.convocationEndsAt=gameExpiry(g);$('adaConvocationEnd').value=content.convocationEndsAt;
  const away=['F','FORA'].includes(String(g.casaFora||'').toUpperCase());
  const fixture=away?(g.adversario||'Adversário')+' — AD Argoncilhe':'AD Argoncilhe — '+(g.adversario||'Adversário');
  content.convocation=['Convocatória · '+(g.tipo||'Jogo'),fixture,'Data: '+dateISO(g.date||g.data).split('-').reverse().join('/'),'Hora: '+(g.time||g.hora||'A confirmar'),'Campo: '+(g.place||g.local||'A confirmar'),'Concentração: '+(g.concentracao||g.concentration||'A confirmar')].join('\n');
@@ -1465,11 +1503,11 @@ async function clearPublishedConvocation(){
  saving=true;const controls=[...$('gestao-equipa').querySelectorAll('input,textarea,select,button')],disabled=controls.map(x=>x.disabled);controls.forEach(x=>x.disabled=true);setStatus('coachStatus','A apagar a convocatória online…');
  try{
   const c=await getClient(),before=await c.from('team_content').select('content,updated_at').eq('id','main').maybeSingle();if(before.error)throw before.error;if(!before.data)throw Error('Não foi encontrada a versão online.');
-  const fields=['convocation','convocationAthletes','convocationMatchKey'];
+  const fields=['convocation','convocationAthletes','convocationMatchKey','convocationEndsAt'];
   if(lastPublishedContent&&fields.some(k=>JSON.stringify(before.data.content?.[k]??null)!==JSON.stringify(lastPublishedContent[k]??null)))throw Error('A convocatória foi alterada noutro dispositivo. Atualize a página e reveja-a antes de apagar.');
-  const payload={...before.data.content,convocation:'',convocationAthletes:[],updated_at:new Date().toISOString()};delete payload.convocationMatchKey;
+  const payload={...before.data.content,convocation:'',convocationAthletes:[],updated_at:new Date().toISOString()};delete payload.convocationMatchKey;delete payload.convocationEndsAt;
   let q=c.from('team_content').update({content:payload,updated_at:payload.updated_at}).eq('id','main');q=before.data.updated_at?q.eq('updated_at',before.data.updated_at):q.is('updated_at',null);const result=await q.select('content,updated_at');if(result.error)throw result.error;if(!result.data?.length)throw Error('Os dados mudaram durante a operação. Tente novamente.');
-  const draft={...content,convocation:'',convocationAthletes:[]};delete draft.convocationMatchKey;
+  const draft={...content,convocation:'',convocationAthletes:[]};delete draft.convocationMatchKey;delete draft.convocationEndsAt;
   previousVersion=copy(before.data.content);loadedRevision=result.data[0].updated_at;publicContent(result.data[0].content);lastPublishedContent=copy(content);draft.updated_at=content.updated_at;content=draft;
   $('adminConvocation').value='';$('adminConvocationAthletes').value='';renderAdmin();setStatus('coachStatus','Convocatória apagada e gravação online confirmada.');setStatus('adminSaveStatus','Convocatória apagada. Outras alterações em rascunho não foram publicadas.');return true;
  }catch(error){setStatus('coachStatus','Não foi possível apagar: '+(error.message||error));return false}
@@ -1518,6 +1556,7 @@ function applyEditor(kind){
  clearEditor(kind);formDirty=false;renderAdmin();setStatus('adminSaveStatus','Alteração preparada. Clique em Guardar tudo para publicar.');
 }
 document.addEventListener('input',e=>{
+ if(e.target.id==='adaConvocationEnd')content.convocationEndsAt=e.target.value;
  if(e.target.id==='adminConvocation')content.convocation=e.target.value;
  if(e.target.id==='adminConvocationAthletes')content.convocationAthletes=uniqueRosterNames(e.target.value.split('\n'));
 });
