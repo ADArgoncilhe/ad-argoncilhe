@@ -1011,7 +1011,7 @@ if ('serviceWorker' in navigator) {
   // A new service worker takes control without forcing a reload while forms are open.
   window.addEventListener('load', async()=>{
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=20261025-v28-convocation-list',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=20261025-v28-roster-cleanup',{updateViaCache:'none'});
       await reg.update();
     }catch(e){console.warn('Service Worker:',e)}
   });
@@ -1408,17 +1408,21 @@ function renderConvocationEditor(){
   $('adminConvocation').before(tools);
   const manual=document.createElement('details');manual.className='ada-manual-athletes';const summary=document.createElement('summary');summary.textContent='Editar nomes manualmente / adicionar outro atleta';manual.append(summary);$('adminConvocationAthletes').before(manual);manual.append($('adminConvocationAthletes'));
   $('adminSaveConvocation').textContent='Aplicar convocatória ao rascunho';
+  const actions=document.createElement('div');actions.className='ada-roster-actions';actions.innerHTML='<button type="button" id="adaRestoreRoster">Repor nomes removidos</button><button type="button" id="adaClearConvocation">Apagar convocatória</button><p class="muted">Remover um nome retira-o desta lista e da seleção atual, sem apagar o atleta do plantel. Use Guardar tudo para publicar.</p>';$('adaRosterCount').after(actions);
  }
  const list=content.games||[],select=$('adaConvocationGame');select.replaceChildren(new Option('Escolher jogo',''));
  list.map((g,i)=>({g,i})).sort((a,b)=>dateISO(a.g.date||a.g.data).localeCompare(dateISO(b.g.date||b.g.data))).forEach(({g,i})=>{const option=new Option(dateISO(g.date||g.data).split('-').reverse().join('/')+' · '+(g.adversario||'Jogo')+' · '+(g.time||g.hora||'A confirmar'),String(i));select.add(option);if(g.adaMatchKey&&g.adaMatchKey===content.convocationMatchKey)option.selected=true});
  renderRosterChoices();
  if(content.convocationMatchKey&&!list.some(g=>g.adaMatchKey===content.convocationMatchKey))setStatus('coachStatus','O jogo associado já não está na agenda. Reveja a convocatória antes de publicar.');
 }
+function rosterNameKey(name){return String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().replace(/\s+/g,' ').toLocaleLowerCase('pt-PT')}
+function uniqueRosterNames(names){const seen=new Set();return (names||[]).map(x=>String(x||'').trim().replace(/\s+/g,' ')).filter(name=>{const key=rosterNameKey(name);if(!key||seen.has(key))return false;seen.add(key);return true})}
 function renderRosterChoices(){
  const box=$('adaRosterChoices');if(!box)return;
- const selected=new Set(content.convocationAthletes||[]),names=[...new Set([...(window.__adaRoster||[]),...selected])];
- box.replaceChildren();names.forEach(name=>{const label=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.checked=selected.has(name);input.dataset.rosterAthlete=name;label.append(input,document.createTextNode(name));box.append(label)});
- setStatus('adaRosterCount',selected.size+' atletas selecionados');
+ const selected=new Set((content.convocationAthletes||[]).map(rosterNameKey)),hidden=new Set(content.hiddenRosterNames||[]),names=uniqueRosterNames([...(content.convocationAthletes||[]),...(window.__adaRoster||[]),...(content.extraRosterNames||[])]).filter(name=>!hidden.has(rosterNameKey(name)));
+ box.replaceChildren();names.forEach(name=>{const row=document.createElement('div');row.className='ada-roster-row';const label=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.checked=selected.has(rosterNameKey(name));input.dataset.rosterAthlete=name;label.append(input,document.createTextNode(name));const remove=document.createElement('button');remove.type='button';remove.textContent='Remover';remove.dataset.removeRoster=name;remove.setAttribute('aria-label','Remover '+name+' da lista');row.append(label,remove);box.append(row)});
+ setStatus('adaRosterCount',names.filter(n=>selected.has(rosterNameKey(n))).length+' atletas selecionados');
+ if($('adaRestoreRoster'))$('adaRestoreRoster').disabled=!hidden.size;
 }
 function fillConvocationFromGame(){
  const choice=$('adaConvocationGame').value;if(choice===''){setStatus('coachStatus','Escolha primeiro um jogo.');return}
@@ -1433,11 +1437,20 @@ function fillConvocationFromGame(){
 }
 document.addEventListener('change',e=>{
  const checkbox=e.target.closest('[data-roster-athlete]');if(!checkbox)return;
- const selected=new Set(content.convocationAthletes||[]);if(checkbox.checked)selected.add(checkbox.dataset.rosterAthlete);else selected.delete(checkbox.dataset.rosterAthlete);
- content.convocationAthletes=[...selected];$('adminConvocationAthletes').value=content.convocationAthletes.join('\n');formDirty=true;draftStatus();setStatus('adaRosterCount',selected.size+' atletas selecionados');
+ const key=rosterNameKey(checkbox.dataset.rosterAthlete),selected=uniqueRosterNames(content.convocationAthletes).filter(n=>rosterNameKey(n)!==key);if(checkbox.checked)selected.push(checkbox.dataset.rosterAthlete);
+ content.convocationAthletes=selected;$('adminConvocationAthletes').value=selected.join('\n');formDirty=true;draftStatus();renderRosterChoices();
 });
-document.addEventListener('input',e=>{if(e.target.id==='adminConvocationAthletes'){content.convocationAthletes=[...new Set(e.target.value.split('\n').map(x=>x.trim()).filter(Boolean))];renderRosterChoices()}});
+document.addEventListener('input',e=>{if(e.target.id==='adminConvocationAthletes'){content.convocationAthletes=uniqueRosterNames(e.target.value.split('\n'));renderRosterChoices()}});
 document.addEventListener('click',e=>{if(e.target.closest('#adaFillConvocation'))fillConvocationFromGame()});
+document.addEventListener('click',e=>{
+ const remove=e.target.closest('[data-remove-roster]'),clear=e.target.closest('#adaClearConvocation'),restore=e.target.closest('#adaRestoreRoster');
+ if(!remove&&!clear&&!restore)return;
+ if(saving||currentUser?.app_metadata?.role!=='coach')return;
+ if(remove){const name=remove.dataset.removeRoster;if(!confirm('Remover '+name+' da lista e da seleção atual? O atleta mantém-se no plantel.'))return;const key=rosterNameKey(name);content.extraRosterNames=uniqueRosterNames([...(content.extraRosterNames||[]),name]);content.hiddenRosterNames=[...new Set([...(content.hiddenRosterNames||[]),key])];content.convocationAthletes=(content.convocationAthletes||[]).filter(n=>rosterNameKey(n)!==key)}
+ if(restore)content.hiddenRosterNames=[];
+ if(clear){if(!confirm('Apagar o texto e os atletas da convocatória atual? O jogo mantém-se no calendário. A alteração só fica pública depois de Guardar tudo.'))return;content.convocation='';content.convocationAthletes=[];delete content.convocationMatchKey;}
+ $('adminConvocation').value=content.convocation||'';$('adminConvocationAthletes').value=(content.convocationAthletes||[]).join('\n');formDirty=true;renderConvocationEditor();draftStatus();setStatus('coachStatus',clear?'Convocatória limpa no rascunho. Clique em Guardar tudo para a retirar da área dos pais.':'Lista atualizada. Clique em Guardar tudo para guardar.');
+});
 function enhanceAdminRows(){
  for(const kind of ['game','training'])document.querySelectorAll('[data-del-'+kind+']').forEach(del=>{
   const i=del.getAttribute('data-del-'+kind);
@@ -1482,7 +1495,7 @@ function applyEditor(kind){
 }
 document.addEventListener('input',e=>{
  if(e.target.id==='adminConvocation')content.convocation=e.target.value;
- if(e.target.id==='adminConvocationAthletes')content.convocationAthletes=e.target.value.split('\n').map(x=>x.trim()).filter(Boolean);
+ if(e.target.id==='adminConvocationAthletes')content.convocationAthletes=uniqueRosterNames(e.target.value.split('\n'));
 });
 document.addEventListener('click',e=>{
  const b=e.target.closest('button');if(!b)return;
@@ -1561,7 +1574,7 @@ document.addEventListener("click",async e=>{
      if(saved)setStatus("adminSaveStatus","Cancelamento removido e alterações guardadas.");
    }
  }
- if(e.target.id==="adminSaveConvocation"){content.convocation=$("adminConvocation").value;content.convocationAthletes=$("adminConvocationAthletes").value.split(/\n/).map(x=>x.trim()).filter(Boolean);renderAdmin();renderConvocationAthletes();setStatus("coachStatus","Convocatória atualizada.")}
+ if(e.target.id==="adminSaveConvocation"){content.convocation=$("adminConvocation").value;content.convocationAthletes=uniqueRosterNames($("adminConvocationAthletes").value.split(/\n/));renderAdmin();renderConvocationAthletes();setStatus("coachStatus","Convocatória atualizada. Clique em Guardar tudo para publicar.")}
  if(e.target.id==="adminSaveAll")save();
  const dn=e.target.closest("[data-del-notice]");if(dn){content.notices.splice(+dn.dataset.delNotice,1);renderAdmin()}
  const dg=e.target.closest("[data-del-game]");if(dg){content.games.splice(+dg.dataset.delGame,1);renderAdmin()}
@@ -1730,7 +1743,9 @@ if((currentUser?.app_metadata?.role||"parent")==="coach") {
 .ada-manual-athletes summary{cursor:pointer;padding:12px 0}
 @media(max-width:500px){.ada-roster-choices{grid-template-columns:1fr}.calendar.ada-calendar-list .item{grid-template-columns:55px minmax(0,1fr)!important;padding:10px}}
 </style>
+<style>.ada-roster-row{display:flex;align-items:center;gap:6px;min-width:0}.ada-roster-row label{flex:1;min-width:0}.ada-roster-row button{font-size:12px;padding:8px;min-height:40px}.ada-roster-actions{display:flex;flex-wrap:wrap;gap:8px}.ada-roster-actions p{flex-basis:100%}#adaClearConvocation{border:1px solid #e88888;color:#ffbaba}</style>
 </body></html>
+
 
 
 
