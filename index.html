@@ -705,6 +705,7 @@ function renderGamesArea(){
   }
 
   function renderCalendar(){
+    ensureCalendarView();
     let items = getCalendarItems(view.getFullYear(), view.getMonth());
 
     if(activeFilter !== 'todos'){
@@ -728,7 +729,7 @@ function renderGamesArea(){
       const dateLabel = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
       
        const eventsHtml = dayEvents.map(e => `
-        <div class="event-row">
+        <div class="event-row${e.isCanceled?' ada-event-canceled':''}">
           <span>${e.activity}</span>
           <span>${e.time}</span>
           <span>${mapLink(e.place, e.place)}</span>
@@ -740,6 +741,17 @@ function renderGamesArea(){
         <div class="day-events">${eventsHtml}</div>
       </div>`;
     }).join('') || `<div class="item"><span>—</span><span>Sem atividades</span><span>—</span><span>—</span><span>—</span></div>`;
+  }
+
+  function ensureCalendarView(){
+    if(document.getElementById('adaCalendarView'))return;
+    const toolbar=document.createElement('div');toolbar.id='adaCalendarView';toolbar.className='ada-view-tools';toolbar.setAttribute('role','group');toolbar.setAttribute('aria-label','Apresentação do calendário');
+    toolbar.innerHTML='<button type="button" class="private-btn" data-calendar-view="list">Lista</button><button type="button" class="private-btn" data-calendar-view="table">Tabela</button>';
+    document.getElementById('calendarContent').before(toolbar);
+    let preference='';try{preference=localStorage.getItem('ada-calendar-view')||''}catch(_){}
+    function select(mode){document.getElementById('calendarContent').classList.toggle('ada-calendar-list',mode==='list');toolbar.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.calendarView===mode)));try{localStorage.setItem('ada-calendar-view',mode)}catch(_){}}
+    toolbar.addEventListener('click',e=>{const b=e.target.closest('[data-calendar-view]');if(b)select(b.dataset.calendarView)});
+    select(['list','table'].includes(preference)?preference:matchMedia('(max-width:760px)').matches?'list':'table');
   }
 
   document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -863,6 +875,7 @@ const players = [
    }
 
    function renderPlayers(){
+     window.__adaRoster=players.filter(p=>p.number>0).map(p=>p.role);
      const grid = document.getElementById('playersGrid');
      grid.innerHTML = players.map((p,i) => {
        const targetUrl = p.url || `https://www.google.com/search?q=${encodeURIComponent(p.role + ' futebol')}`;
@@ -998,7 +1011,7 @@ if ('serviceWorker' in navigator) {
   // A new service worker takes control without forcing a reload while forms are open.
   window.addEventListener('load', async()=>{
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=20261024-v28-home-notices',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=20261025-v28-convocation-list',{updateViaCache:'none'});
       await reg.update();
     }catch(e){console.warn('Service Worker:',e)}
   });
@@ -1370,6 +1383,7 @@ function renderAdmin(){
  const cl=$("adminCanceledTrainingList"); if(cl)cl.innerHTML=(content.cancelledTrainings||[]).map((d,i)=>`<div class="admin-row"><span>${d}</span><button data-del-cancelled-training="${i}" type="button">Repor</button></div>`).join("");
  if($("adminConvocation"))$("adminConvocation").value=content.convocation||"";
  if($("adminConvocationAthletes"))$("adminConvocationAthletes").value=(content.convocationAthletes||[]).join("\n");
+ renderConvocationEditor();
  loadCoachAcknowledgements();
  enhanceAdminRows();draftStatus();
 }
@@ -1387,6 +1401,43 @@ function ensureEditorTools(){
   const time=$('admin'+kind+'Time');time.setAttribute('aria-label','Horário (ex.: 18:00–19:30)');
  }
 }
+function renderConvocationEditor(){
+ if(!$('adaConvocationTools')){
+  const tools=document.createElement('div');tools.id='adaConvocationTools';
+  tools.innerHTML='<label for="adaConvocationGame">Jogo da convocatória</label><select id="adaConvocationGame"><option value="">Escolher jogo</option></select><button type="button" id="adaFillConvocation">Preencher dados do jogo</button><p class="muted">Preenche adversário, data, hora, campo e concentração. Pode depois ajustar o texto.</p><fieldset><legend>Selecionar atletas convocados</legend><div id="adaRosterChoices" class="ada-roster-choices"></div></fieldset><p id="adaRosterCount" role="status"></p>';
+  $('adminConvocation').before(tools);
+  const manual=document.createElement('details');manual.className='ada-manual-athletes';const summary=document.createElement('summary');summary.textContent='Editar nomes manualmente / adicionar outro atleta';manual.append(summary);$('adminConvocationAthletes').before(manual);manual.append($('adminConvocationAthletes'));
+  $('adminSaveConvocation').textContent='Aplicar convocatória ao rascunho';
+ }
+ const list=content.games||[],select=$('adaConvocationGame');select.replaceChildren(new Option('Escolher jogo',''));
+ list.map((g,i)=>({g,i})).sort((a,b)=>dateISO(a.g.date||a.g.data).localeCompare(dateISO(b.g.date||b.g.data))).forEach(({g,i})=>{const option=new Option(dateISO(g.date||g.data).split('-').reverse().join('/')+' · '+(g.adversario||'Jogo')+' · '+(g.time||g.hora||'A confirmar'),String(i));select.add(option);if(g.adaMatchKey&&g.adaMatchKey===content.convocationMatchKey)option.selected=true});
+ renderRosterChoices();
+ if(content.convocationMatchKey&&!list.some(g=>g.adaMatchKey===content.convocationMatchKey))setStatus('coachStatus','O jogo associado já não está na agenda. Reveja a convocatória antes de publicar.');
+}
+function renderRosterChoices(){
+ const box=$('adaRosterChoices');if(!box)return;
+ const selected=new Set(content.convocationAthletes||[]),names=[...new Set([...(window.__adaRoster||[]),...selected])];
+ box.replaceChildren();names.forEach(name=>{const label=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.checked=selected.has(name);input.dataset.rosterAthlete=name;label.append(input,document.createTextNode(name));box.append(label)});
+ setStatus('adaRosterCount',selected.size+' atletas selecionados');
+}
+function fillConvocationFromGame(){
+ const choice=$('adaConvocationGame').value;if(choice===''){setStatus('coachStatus','Escolha primeiro um jogo.');return}
+ const g=content.games[Number(choice)];if(!g)return;
+ if(String(content.convocation||'').trim()&&!confirm('Substituir o texto da convocatória pelos dados deste jogo? A seleção de atletas será mantida.'))return;
+ if(!g.adaMatchKey)g.adaMatchKey=crypto.randomUUID();
+ content.convocationMatchKey=g.adaMatchKey;
+ const away=['F','FORA'].includes(String(g.casaFora||'').toUpperCase());
+ const fixture=away?(g.adversario||'Adversário')+' — AD Argoncilhe':'AD Argoncilhe — '+(g.adversario||'Adversário');
+ content.convocation=['Convocatória · '+(g.tipo||'Jogo'),fixture,'Data: '+dateISO(g.date||g.data).split('-').reverse().join('/'),'Hora: '+(g.time||g.hora||'A confirmar'),'Campo: '+(g.place||g.local||'A confirmar'),'Concentração: '+(g.concentracao||g.concentration||'A confirmar')].join('\n');
+ $('adminConvocation').value=content.convocation;formDirty=true;draftStatus();setStatus('coachStatus','Dados preenchidos. Reveja o texto e os atletas; use Guardar tudo para publicar.');
+}
+document.addEventListener('change',e=>{
+ const checkbox=e.target.closest('[data-roster-athlete]');if(!checkbox)return;
+ const selected=new Set(content.convocationAthletes||[]);if(checkbox.checked)selected.add(checkbox.dataset.rosterAthlete);else selected.delete(checkbox.dataset.rosterAthlete);
+ content.convocationAthletes=[...selected];$('adminConvocationAthletes').value=content.convocationAthletes.join('\n');formDirty=true;draftStatus();setStatus('adaRosterCount',selected.size+' atletas selecionados');
+});
+document.addEventListener('input',e=>{if(e.target.id==='adminConvocationAthletes'){content.convocationAthletes=[...new Set(e.target.value.split('\n').map(x=>x.trim()).filter(Boolean))];renderRosterChoices()}});
+document.addEventListener('click',e=>{if(e.target.closest('#adaFillConvocation'))fillConvocationFromGame()});
 function enhanceAdminRows(){
  for(const kind of ['game','training'])document.querySelectorAll('[data-del-'+kind+']').forEach(del=>{
   const i=del.getAttribute('data-del-'+kind);
@@ -1659,7 +1710,28 @@ if((currentUser?.app_metadata?.role||"parent")==="coach") {
 #adaNoticeExpiry{color-scheme:dark}
 @media(max-width:680px){.ada-parent-home-grid{grid-template-columns:1fr;gap:0}#adaParentHome .ada-parent-feature{margin:8px 0}.ada-parent-session .hero h1{font-size:28px}}
 </style>
+<style>
+.ada-view-tools{display:flex;gap:8px;margin:12px 0}
+.ada-view-tools [aria-pressed=true]{background:#e8be36;color:#111;border-color:#e8be36}
+.calendar.ada-calendar-list{overflow-x:visible}
+.calendar.ada-calendar-list .head{display:none!important}
+.calendar.ada-calendar-list .item{min-width:0!important;grid-template-columns:70px minmax(0,1fr)!important;align-items:start;gap:12px;padding:14px}
+.calendar.ada-calendar-list .day-events{min-width:0}
+.calendar.ada-calendar-list .event-row{grid-template-columns:minmax(0,1fr)!important;gap:5px;min-width:0;padding:8px 0}
+.calendar.ada-calendar-list .event-row>span{overflow-wrap:anywhere}
+.calendar.ada-calendar-list .event-row>span:first-child{font-weight:800}
+.calendar.ada-calendar-list .event-row>span:nth-child(2)::before{content:'Horário: ';color:#aaa}
+.calendar.ada-calendar-list .event-row>span:nth-child(3)::before{content:'Local: ';color:#aaa}
+.ada-event-canceled{border-left:3px solid #f47d7d;padding-left:10px!important}
+.ada-roster-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.ada-roster-choices label{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #555;border-radius:8px;overflow-wrap:anywhere;cursor:pointer}
+#gestao-equipa .ada-roster-choices input{width:20px;height:20px;flex:none;margin:0;accent-color:#e8be36}
+#adaConvocationTools fieldset{border:1px solid #555;border-radius:10px;padding:12px;margin:14px 0}
+.ada-manual-athletes summary{cursor:pointer;padding:12px 0}
+@media(max-width:500px){.ada-roster-choices{grid-template-columns:1fr}.calendar.ada-calendar-list .item{grid-template-columns:55px minmax(0,1fr)!important;padding:10px}}
+</style>
 </body></html>
+
 
 
 
