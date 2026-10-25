@@ -1,5 +1,5 @@
 /* V28: fresh navigation, no caching of API responses, retain push support. */
-const BUILD_ID = "20261025-v28-roster-cleanup";
+const BUILD_ID = "20261025-v28-roster-persist-fix";
 const CACHE_NAME = `ad-argoncilhe-sub10-${BUILD_ID}`;
 const APP_SHELL = ["./index.html", "./manifest.json"];
 const SCOPE = new URL(self.registration.scope);
@@ -89,6 +89,7 @@ self.addEventListener("notificationclick", event => {
     if (self.clients.openWindow) await self.clients.openWindow(target);
   })());
 });
+
 
 
 

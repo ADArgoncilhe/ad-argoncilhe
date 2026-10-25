@@ -876,6 +876,7 @@ const players = [
 
    function renderPlayers(){
      window.__adaRoster=players.filter(p=>p.number>0).map(p=>p.role);
+     window.__adaRosterRecords=players.filter(p=>p.number>0).map(p=>({number:p.number,name:p.role}));
      const grid = document.getElementById('playersGrid');
      grid.innerHTML = players.map((p,i) => {
        const targetUrl = p.url || `https://www.google.com/search?q=${encodeURIComponent(p.role + ' futebol')}`;
@@ -1011,7 +1012,7 @@ if ('serviceWorker' in navigator) {
   // A new service worker takes control without forcing a reload while forms are open.
   window.addEventListener('load', async()=>{
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=20261025-v28-roster-cleanup',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=20261025-v28-roster-persist-fix',{updateViaCache:'none'});
       await reg.update();
     }catch(e){console.warn('Service Worker:',e)}
   });
@@ -1261,7 +1262,7 @@ async function save(){
   // Ler a versão persistida antes de gravar para comparar com o estado real.
   const before=await c.from("team_content").select("content,updated_at").eq("id","main").maybeSingle();
   if(before.error)throw before.error;
-  if((before.data?.updated_at||null)!==loadedRevision)throw Error('Outro dispositivo publicou alterações. O seu rascunho foi mantido. Copie as alterações antes de atualizar a página para consultar a versão mais recente.');
+  if(!sameRevision(before.data?.updated_at,loadedRevision))throw Error('Outro dispositivo publicou alterações. O seu rascunho foi mantido. Copie as alterações antes de atualizar a página para consultar a versão mais recente.');
   const previousContent=JSON.parse(JSON.stringify(before.data?.content ?? lastPublishedContent ?? {}));
   const savedAt=new Date().toISOString();
   const payload={...content,updated_at:savedAt};
@@ -1408,19 +1409,27 @@ function renderConvocationEditor(){
   $('adminConvocation').before(tools);
   const manual=document.createElement('details');manual.className='ada-manual-athletes';const summary=document.createElement('summary');summary.textContent='Editar nomes manualmente / adicionar outro atleta';manual.append(summary);$('adminConvocationAthletes').before(manual);manual.append($('adminConvocationAthletes'));
   $('adminSaveConvocation').textContent='Aplicar convocatória ao rascunho';
-  const actions=document.createElement('div');actions.className='ada-roster-actions';actions.innerHTML='<button type="button" id="adaRestoreRoster">Repor nomes removidos</button><button type="button" id="adaClearConvocation">Apagar convocatória</button><p class="muted">Remover um nome retira-o desta lista e da seleção atual, sem apagar o atleta do plantel. Use Guardar tudo para publicar.</p>';$('adaRosterCount').after(actions);
+  const actions=document.createElement('div');actions.className='ada-roster-actions';actions.innerHTML='<button type="button" id="adaRestoreRoster">Repor nomes removidos</button><button type="button" id="adaClearConvocation">Apagar convocatória publicada</button><p class="muted">As alterações aos nomes são publicadas em Guardar tudo. Apagar convocatória grava a remoção imediatamente, após confirmação, e mantém o jogo no calendário.</p>';$('adaRosterCount').after(actions);
  }
  const list=content.games||[],select=$('adaConvocationGame');select.replaceChildren(new Option('Escolher jogo',''));
  list.map((g,i)=>({g,i})).sort((a,b)=>dateISO(a.g.date||a.g.data).localeCompare(dateISO(b.g.date||b.g.data))).forEach(({g,i})=>{const option=new Option(dateISO(g.date||g.data).split('-').reverse().join('/')+' · '+(g.adversario||'Jogo')+' · '+(g.time||g.hora||'A confirmar'),String(i));select.add(option);if(g.adaMatchKey&&g.adaMatchKey===content.convocationMatchKey)option.selected=true});
  renderRosterChoices();
  if(content.convocationMatchKey&&!list.some(g=>g.adaMatchKey===content.convocationMatchKey))setStatus('coachStatus','O jogo associado já não está na agenda. Reveja a convocatória antes de publicar.');
 }
-function rosterNameKey(name){return String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().replace(/\s+/g,' ').toLocaleLowerCase('pt-PT')}
+function normalizedRosterName(name){return String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-PT').replace(/\(\s*gr\s*\)/g,'').replace(/[^a-z0-9\s]/g,' ').trim().replace(/\s+/g,' ')}
+function rosterNameKey(name){
+ const records=window.__adaRosterRecords||[],raw=String(name||'').trim(),number=/^#?\s*(\d{1,3})(?:\s|[.\-–:])/.exec(raw);
+ if(number){const matches=records.filter(p=>p.number===Number(number[1]));if(matches.length===1)return normalizedRosterName(matches[0].name)}
+ const key=normalizedRosterName(raw),tokens=key.split(' ');
+ const matches=records.filter(p=>{let position=-1;return normalizedRosterName(p.name).split(' ').every(token=>{position=tokens.indexOf(token,position+1);return position>=0})});
+ return matches.length===1?normalizedRosterName(matches[0].name):key;
+}
+function sameRevision(a,b){if(!a||!b)return !a&&!b;return Date.parse(a)===Date.parse(b)}
 function uniqueRosterNames(names){const seen=new Set();return (names||[]).map(x=>String(x||'').trim().replace(/\s+/g,' ')).filter(name=>{const key=rosterNameKey(name);if(!key||seen.has(key))return false;seen.add(key);return true})}
 function renderRosterChoices(){
  const box=$('adaRosterChoices');if(!box)return;
- const selected=new Set((content.convocationAthletes||[]).map(rosterNameKey)),hidden=new Set(content.hiddenRosterNames||[]),names=uniqueRosterNames([...(content.convocationAthletes||[]),...(window.__adaRoster||[]),...(content.extraRosterNames||[])]).filter(name=>!hidden.has(rosterNameKey(name)));
- box.replaceChildren();names.forEach(name=>{const row=document.createElement('div');row.className='ada-roster-row';const label=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.checked=selected.has(rosterNameKey(name));input.dataset.rosterAthlete=name;label.append(input,document.createTextNode(name));const remove=document.createElement('button');remove.type='button';remove.textContent='Remover';remove.dataset.removeRoster=name;remove.setAttribute('aria-label','Remover '+name+' da lista');row.append(label,remove);box.append(row)});
+ const selected=new Set((content.convocationAthletes||[]).map(rosterNameKey)),hidden=new Set((content.hiddenRosterNames||[]).map(rosterNameKey)),names=uniqueRosterNames([...(content.convocationAthletes||[]),...(window.__adaRoster||[]),...(content.extraRosterNames||[])]).filter(name=>!hidden.has(rosterNameKey(name)));
+ box.replaceChildren();names.forEach(name=>{const record=(window.__adaRosterRecords||[]).find(p=>normalizedRosterName(p.name)===rosterNameKey(name)),display=record?record.number+' · '+record.name:name;const row=document.createElement('div');row.className='ada-roster-row';const label=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.checked=selected.has(rosterNameKey(name));input.dataset.rosterAthlete=name;label.append(input,document.createTextNode(display));const remove=document.createElement('button');remove.type='button';remove.textContent='Remover';remove.dataset.removeRoster=name;remove.setAttribute('aria-label','Remover '+display+' da lista');row.append(label,remove);box.append(row)});
  setStatus('adaRosterCount',names.filter(n=>selected.has(rosterNameKey(n))).length+' atletas selecionados');
  if($('adaRestoreRoster'))$('adaRestoreRoster').disabled=!hidden.size;
 }
@@ -1442,15 +1451,30 @@ document.addEventListener('change',e=>{
 });
 document.addEventListener('input',e=>{if(e.target.id==='adminConvocationAthletes'){content.convocationAthletes=uniqueRosterNames(e.target.value.split('\n'));renderRosterChoices()}});
 document.addEventListener('click',e=>{if(e.target.closest('#adaFillConvocation'))fillConvocationFromGame()});
-document.addEventListener('click',e=>{
+document.addEventListener('click',async e=>{
  const remove=e.target.closest('[data-remove-roster]'),clear=e.target.closest('#adaClearConvocation'),restore=e.target.closest('#adaRestoreRoster');
  if(!remove&&!clear&&!restore)return;
  if(saving||currentUser?.app_metadata?.role!=='coach')return;
  if(remove){const name=remove.dataset.removeRoster;if(!confirm('Remover '+name+' da lista e da seleção atual? O atleta mantém-se no plantel.'))return;const key=rosterNameKey(name);content.extraRosterNames=uniqueRosterNames([...(content.extraRosterNames||[]),name]);content.hiddenRosterNames=[...new Set([...(content.hiddenRosterNames||[]),key])];content.convocationAthletes=(content.convocationAthletes||[]).filter(n=>rosterNameKey(n)!==key)}
  if(restore)content.hiddenRosterNames=[];
- if(clear){if(!confirm('Apagar o texto e os atletas da convocatória atual? O jogo mantém-se no calendário. A alteração só fica pública depois de Guardar tudo.'))return;content.convocation='';content.convocationAthletes=[];delete content.convocationMatchKey;}
+ if(clear){if(!confirm('Apagar agora a convocatória publicada? O texto e os convocados serão retirados da área dos pais. O jogo mantém-se no calendário.'))return;await clearPublishedConvocation();return;}
  $('adminConvocation').value=content.convocation||'';$('adminConvocationAthletes').value=(content.convocationAthletes||[]).join('\n');formDirty=true;renderConvocationEditor();draftStatus();setStatus('coachStatus',clear?'Convocatória limpa no rascunho. Clique em Guardar tudo para a retirar da área dos pais.':'Lista atualizada. Clique em Guardar tudo para guardar.');
 });
+async function clearPublishedConvocation(){
+ if(saving||currentUser?.app_metadata?.role!=='coach')return false;
+ saving=true;const controls=[...$('gestao-equipa').querySelectorAll('input,textarea,select,button')],disabled=controls.map(x=>x.disabled);controls.forEach(x=>x.disabled=true);setStatus('coachStatus','A apagar a convocatória online…');
+ try{
+  const c=await getClient(),before=await c.from('team_content').select('content,updated_at').eq('id','main').maybeSingle();if(before.error)throw before.error;if(!before.data)throw Error('Não foi encontrada a versão online.');
+  const fields=['convocation','convocationAthletes','convocationMatchKey'];
+  if(lastPublishedContent&&fields.some(k=>JSON.stringify(before.data.content?.[k]??null)!==JSON.stringify(lastPublishedContent[k]??null)))throw Error('A convocatória foi alterada noutro dispositivo. Atualize a página e reveja-a antes de apagar.');
+  const payload={...before.data.content,convocation:'',convocationAthletes:[],updated_at:new Date().toISOString()};delete payload.convocationMatchKey;
+  let q=c.from('team_content').update({content:payload,updated_at:payload.updated_at}).eq('id','main');q=before.data.updated_at?q.eq('updated_at',before.data.updated_at):q.is('updated_at',null);const result=await q.select('content,updated_at');if(result.error)throw result.error;if(!result.data?.length)throw Error('Os dados mudaram durante a operação. Tente novamente.');
+  const draft={...content,convocation:'',convocationAthletes:[]};delete draft.convocationMatchKey;
+  previousVersion=copy(before.data.content);loadedRevision=result.data[0].updated_at;publicContent(result.data[0].content);lastPublishedContent=copy(content);draft.updated_at=content.updated_at;content=draft;
+  $('adminConvocation').value='';$('adminConvocationAthletes').value='';renderAdmin();setStatus('coachStatus','Convocatória apagada e gravação online confirmada.');setStatus('adminSaveStatus','Convocatória apagada. Outras alterações em rascunho não foram publicadas.');return true;
+ }catch(error){setStatus('coachStatus','Não foi possível apagar: '+(error.message||error));return false}
+ finally{saving=false;controls.forEach((x,i)=>x.disabled=disabled[i]);draftStatus()}
+}
 function enhanceAdminRows(){
  for(const kind of ['game','training'])document.querySelectorAll('[data-del-'+kind+']').forEach(del=>{
   const i=del.getAttribute('data-del-'+kind);
@@ -1745,6 +1769,7 @@ if((currentUser?.app_metadata?.role||"parent")==="coach") {
 </style>
 <style>.ada-roster-row{display:flex;align-items:center;gap:6px;min-width:0}.ada-roster-row label{flex:1;min-width:0}.ada-roster-row button{font-size:12px;padding:8px;min-height:40px}.ada-roster-actions{display:flex;flex-wrap:wrap;gap:8px}.ada-roster-actions p{flex-basis:100%}#adaClearConvocation{border:1px solid #e88888;color:#ffbaba}</style>
 </body></html>
+
 
 
 
