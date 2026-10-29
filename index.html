@@ -1012,7 +1012,7 @@ if ('serviceWorker' in navigator) {
   // A new service worker takes control without forcing a reload while forms are open.
   window.addEventListener('load', async()=>{
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=20261029-v28-whatsapp',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=20261029-v28-publish-fix',{updateViaCache:'none'});
       await reg.update();
     }catch(e){console.warn('Service Worker:',e)}
   });
@@ -1301,6 +1301,7 @@ function showCoach(){
  const role=currentUser?.app_metadata?.role||"parent";
  if(role!=="coach"){ openLogin(); return; }
  $("gestao-equipa")?.classList.add("show");
+ if(!formDirty)resetExpiredConvocation();
  if(!content.games?.length)content.games=copy(window.__adaBuiltInGames||[]);
  const dates=new Set((content.trainings||[]).map(t=>dateISO(t.date||t.data)));
  content.trainings=[...(content.trainings||[]),...(window.__adaTrainingDefaults?.()||[]).filter(t=>!dates.has(t.data)&&!(content.cancelledTrainings||[]).includes(t.data))].sort((a,b)=>dateISO(a.date||a.data).localeCompare(dateISO(b.date||b.data)));
@@ -1358,6 +1359,39 @@ async function save(){
   return true;
  }catch(err){setStatus("adminSaveStatus","Erro ao guardar: "+(err?.message||"verifica a ligação ao Supabase."));return false}
  finally{saving=false;controls.forEach((x,i)=>x.disabled=disabled[i]);if($('adaRestorePrevious'))$('adaRestorePrevious').disabled=!previousVersion;if(hasDraft())draftStatus();renderWhatsAppSharing()}
+}
+
+async function publishConvocation(){
+ if(saving)return false;
+ if(currentUser?.app_metadata?.role!=='coach'){setStatus('coachStatus','Entre com a conta de treinador para publicar.');return false}
+ content.convocation=$('adminConvocation').value.trim();
+ content.convocationAthletes=uniqueRosterNames($('adminConvocationAthletes').value.split('\n'));
+ content.convocationEndsAt=$('adaConvocationEnd').value||convocationExpiry(content);
+ if(!content.convocation){setStatus('coachStatus','Escreva o texto ou escolha um jogo e carregue em Preencher dados do jogo.');return false}
+ if(!content.convocationEndsAt||convocationExpired(content)){setStatus('coachStatus','Indique um fim previsto do jogo no futuro. O texto foi mantido.');$('adaConvocationEnd').focus();return false}
+ const fields=['convocation','convocationAthletes','convocationEndsAt','convocationMatchKey'];
+ const draft=copy(content),baseline=copy(lastPublishedContent||{}),panel=$('gestao-equipa'),controls=[...panel.querySelectorAll('input,textarea,select,button')],disabled=controls.map(x=>x.disabled);
+ saving=true;controls.forEach(x=>x.disabled=true);setStatus('coachStatus','A publicar convocatória…');
+ try{
+  const c=await getClient(),before=await c.from('team_content').select('content,updated_at').eq('id','main').maybeSingle();
+  if(before.error)throw before.error;
+  const remote=before.data?.content||{};
+  if(fields.some(k=>JSON.stringify(remote[k]??null)!==JSON.stringify(lastPublishedContent?.[k]??null)))throw Error('A convocatória online mudou. O seu texto foi mantido; copie-o antes de atualizar a página.');
+  const at=new Date().toISOString(),payload={...remote,updated_at:at};
+  for(const k of fields){if(draft[k]!==undefined)payload[k]=draft[k];else delete payload[k]}
+  let q;
+  if(before.data){q=c.from('team_content').update({content:payload,updated_at:at}).eq('id','main');q=before.data.updated_at?q.eq('updated_at',before.data.updated_at):q.is('updated_at',null)}
+  else q=c.from('team_content').insert({id:'main',content:payload,updated_at:at});
+  const r=await q.select('content,updated_at');if(r.error)throw r.error;if(!r.data?.length)throw Error('A gravação não foi confirmada. O texto foi mantido; tente novamente.');
+  previousVersion=copy(remote);loadedRevision=r.data[0].updated_at;publicContent(r.data[0].content);lastPublishedContent=copy(content);
+  // Preserve unrelated local edits, without overwriting concurrent online changes later.
+  content=copy(content);
+  for(const k of Object.keys(draft))if(!fields.includes(k)&&k!=='updated_at'&&JSON.stringify(draft[k])!==JSON.stringify(baseline[k]))content[k]=draft[k];
+  formDirty=false;setStatus('coachStatus','Convocatória publicada e gravação online confirmada. Pode partilhar no WhatsApp.');
+  try{if(hasNotifiableChanges(remote,payload))await sendPushForContentChange(remote,payload)}catch(e){setStatus('coachStatus','Convocatória publicada. Não foi possível confirmar o envio das notificações. Pode partilhar no WhatsApp.')}
+  return true;
+ }catch(e){setStatus('coachStatus','Não foi possível publicar: '+(e.message||e));return false}
+ finally{saving=false;controls.forEach((x,i)=>x.disabled=disabled[i]);draftStatus()}
 }
 
 function hasNotifiableChanges(oldC,newC){
@@ -1435,7 +1469,6 @@ async function loadCoachAcknowledgements(){
 }
 
 function renderAdmin(){
- resetExpiredConvocation();
  ensureEditorTools();
  const nl=$("adminNoticeList"),gl=$("adminGameList"),tl=$("adminTrainingList");
  if(nl)nl.innerHTML=(content.notices||[]).map((n,i)=>`<div class="admin-row"><span>${n.pinned?'📌 ':''}${escapeAdaNotice(n.title||"Aviso")}<small style="display:block">${n.archived?'Arquivado':window.adaNoticeExpired(n)?'Expirado':n.expiresOn?'Visível até '+escapeAdaNotice(n.expiresOn.split('-').reverse().join('/')):'Sem prazo de validade'}</small></span><button data-edit-notice="${i}" type="button">Editar</button><button data-archive-notice="${i}" type="button">${n.archived||window.adaNoticeExpired(n)?'Reativar':'Arquivar'}</button><button data-del-notice="${i}" type="button">Eliminar</button></div>`).join("");
@@ -1474,7 +1507,7 @@ function renderConvocationEditor(){
   tools.innerHTML='<label for="adaConvocationGame">Jogo da convocatória</label><select id="adaConvocationGame"><option value="">Escolher jogo</option></select><button type="button" id="adaFillConvocation">Preencher dados do jogo</button><p class="muted">Preenche adversário, data, hora, campo e concentração. Pode depois ajustar o texto.</p><label for="adaConvocationEnd">Fim previsto do jogo (hora de Portugal)</label><input type="datetime-local" id="adaConvocationEnd"><p class="muted">A convocatória deixa de aparecer automaticamente nesta hora. Por defeito: início + 2 horas; ajuste se necessário. Sem hora de início, usa o fim do dia.</p><fieldset><legend>Selecionar atletas convocados</legend><div id="adaRosterChoices" class="ada-roster-choices"></div></fieldset><p id="adaRosterCount" role="status"></p>';
   $('adminConvocation').before(tools);
   const manual=document.createElement('details');manual.className='ada-manual-athletes';const summary=document.createElement('summary');summary.textContent='Editar nomes manualmente / adicionar outro atleta';manual.append(summary);$('adminConvocationAthletes').before(manual);manual.append($('adminConvocationAthletes'));
-  $('adminSaveConvocation').textContent='Aplicar convocatória ao rascunho';
+  $('adminSaveConvocation').textContent='Publicar convocatória';
   const actions=document.createElement('div');actions.className='ada-roster-actions';actions.innerHTML='<button type="button" id="adaRestoreRoster">Repor nomes removidos</button><button type="button" id="adaClearConvocation">Apagar convocatória publicada</button><p class="muted">As alterações aos nomes são publicadas em Guardar tudo. Apagar convocatória grava a remoção imediatamente, após confirmação, e mantém o jogo no calendário.</p>';$('adaRosterCount').after(actions);
  }
  $('adaConvocationEnd').value=convocationExpiry(content);
@@ -1667,7 +1700,7 @@ document.addEventListener("click",async e=>{
      if(saved)setStatus("adminSaveStatus","Cancelamento removido e alterações guardadas.");
    }
  }
- if(e.target.id==="adminSaveConvocation"){content.convocation=$("adminConvocation").value;content.convocationAthletes=uniqueRosterNames($("adminConvocationAthletes").value.split(/\n/));renderAdmin();renderConvocationAthletes();setStatus("coachStatus","Convocatória atualizada. Clique em Guardar tudo para publicar.")}
+ if(e.target.id==="adminSaveConvocation"){await publishConvocation();return}
  if(e.target.id==="adminSaveAll")save();
  const dn=e.target.closest("[data-del-notice]");if(dn){content.notices.splice(+dn.dataset.delNotice,1);renderAdmin()}
  const dg=e.target.closest("[data-del-game]");if(dg){content.games.splice(+dg.dataset.delGame,1);renderAdmin()}
