@@ -108,6 +108,12 @@ section h2{font-size:21px;letter-spacing:-.02em}
 </style>
 
 <style id="fase3-styles">
+#gestao-equipa button{background:#fff!important;color:#111!important;border:2px solid #ccc!important;border-radius:10px;min-height:46px;padding:11px 16px;font-size:15px;font-weight:700;line-height:1.35;cursor:pointer;opacity:1}
+#gestao-equipa button:disabled{background:#343434!important;color:#ccc!important;border-color:#777!important;cursor:not-allowed;opacity:1}
+#gestao-equipa button:focus-visible{outline:3px solid #ffd84d;outline-offset:3px}
+#gestao-equipa #adminSaveConvocation:not(:disabled){background:#ffd84d!important;color:#111!important;border-color:#ffd84d!important}
+#gestao-equipa #coachStatus:not(:empty){background:#242424;color:#fff!important;border:1px solid #aaa;padding:12px;font-size:15px;line-height:1.5;min-height:24px;margin-top:12px}
+#adaConvocationTools label{display:block;margin-top:12px}
 .fase3-login{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;align-items:center;justify-content:center;padding:20px}
 .fase3-login.show{display:flex}.fase3-box{width:min(430px,100%);background:#111;color:#fff;border:1px solid #333;border-radius:20px;padding:24px;box-sizing:border-box}
 .fase3-box h3{margin:0 0 8px}.fase3-box p{color:#aaa;font-size:14px}.fase3-input{width:100%;box-sizing:border-box;background:#191919;color:#fff;border:1px solid #444;border-radius:10px;padding:12px;margin:5px 0;font:inherit}
@@ -1012,7 +1018,7 @@ if ('serviceWorker' in navigator) {
   // A new service worker takes control without forcing a reload while forms are open.
   window.addEventListener('load', async()=>{
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=20261029-v28-publish-fix',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=20261029-v28-controls-fix',{updateViaCache:'none'});
       await reg.update();
     }catch(e){console.warn('Service Worker:',e)}
   });
@@ -1045,6 +1051,10 @@ document.addEventListener('change',e=>{if(e.target.closest('#gestao-equipa')){fo
 let currentUser=null;
 const $=id=>document.getElementById(id);
 function setStatus(id,msg){const e=$(id);if(e)e.textContent=msg||""}
+async function runConvocationAction(action){
+ try{await action()}catch(e){console.error('Convocatória:',e);setStatus('coachStatus','Erro na convocatória: '+(e.message||e)+'. O texto foi mantido.')}
+ $('coachStatus')?.scrollIntoView({block:'nearest',behavior:'smooth'});
+}
 function openLogin(){ $("fase3Login")?.classList.add("show"); $("fase3AuthError").textContent=""; setTimeout(()=>$("fase3Email")?.focus(),50)}
 function closeLogin(){ $("fase3Login")?.classList.remove("show") } 
 function showParentSession(){const bar=$("parentSessionBar");if(bar)bar.hidden=false;window.__adaParentLoggedIn=true;window.__adaRenderParentNextGames?.();window.__adaParentFeatures?.();renderAdaNoticeCenter()}
@@ -1087,7 +1097,7 @@ function gameExpiry(g){
  if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return '';
  if(!times?.length)return date+'T23:59';
  const [h,m]=(times[1]||times[0]).split(':').map(Number);
- const d=new Date(date+'T00:00:00Z');d.setUTCMinutes(h*60+m+(times[1]?0:120));return d.toISOString().slice(0,16);
+ const d=new Date(date+'T00:00:00Z');if(!Number.isFinite(d.getTime()))return '';d.setUTCMinutes(h*60+m+(times[1]?0:120));return d.toISOString().slice(0,16);
 }
 function convocationExpiry(c){
  if(c.convocationEndsAt)return c.convocationEndsAt;
@@ -1508,6 +1518,7 @@ function renderConvocationEditor(){
   $('adminConvocation').before(tools);
   const manual=document.createElement('details');manual.className='ada-manual-athletes';const summary=document.createElement('summary');summary.textContent='Editar nomes manualmente / adicionar outro atleta';manual.append(summary);$('adminConvocationAthletes').before(manual);manual.append($('adminConvocationAthletes'));
   $('adminSaveConvocation').textContent='Publicar convocatória';
+  $('coachStatus').setAttribute('role','status');$('coachStatus').setAttribute('aria-live','polite');
   const actions=document.createElement('div');actions.className='ada-roster-actions';actions.innerHTML='<button type="button" id="adaRestoreRoster">Repor nomes removidos</button><button type="button" id="adaClearConvocation">Apagar convocatória publicada</button><p class="muted">As alterações aos nomes são publicadas em Guardar tudo. Apagar convocatória grava a remoção imediatamente, após confirmação, e mantém o jogo no calendário.</p>';$('adaRosterCount').after(actions);
  }
  $('adaConvocationEnd').value=convocationExpiry(content);
@@ -1551,7 +1562,12 @@ document.addEventListener('change',e=>{
  content.convocationAthletes=selected;$('adminConvocationAthletes').value=selected.join('\n');formDirty=true;draftStatus();renderRosterChoices();
 });
 document.addEventListener('input',e=>{if(e.target.id==='adminConvocationAthletes'){content.convocationAthletes=uniqueRosterNames(e.target.value.split('\n'));renderRosterChoices()}});
-document.addEventListener('click',e=>{if(e.target.closest('#adaFillConvocation'))fillConvocationFromGame()});
+document.addEventListener('click',e=>{
+ const b=e.target.closest('#adaFillConvocation,#adminSaveConvocation');if(!b)return;
+ e.preventDefault();e.stopImmediatePropagation();
+ if(saving){setStatus('coachStatus','A aguardar resposta da gravação online…');return}
+ runConvocationAction(()=>b.id==='adaFillConvocation'?fillConvocationFromGame():publishConvocation());
+},true);
 document.addEventListener('click',async e=>{
  const remove=e.target.closest('[data-remove-roster]'),clear=e.target.closest('#adaClearConvocation'),restore=e.target.closest('#adaRestoreRoster');
  if(!remove&&!clear&&!restore)return;
@@ -1700,7 +1716,6 @@ document.addEventListener("click",async e=>{
      if(saved)setStatus("adminSaveStatus","Cancelamento removido e alterações guardadas.");
    }
  }
- if(e.target.id==="adminSaveConvocation"){await publishConvocation();return}
  if(e.target.id==="adminSaveAll")save();
  const dn=e.target.closest("[data-del-notice]");if(dn){content.notices.splice(+dn.dataset.delNotice,1);renderAdmin()}
  const dg=e.target.closest("[data-del-game]");if(dg){content.games.splice(+dg.dataset.delGame,1);renderAdmin()}
@@ -1710,6 +1725,7 @@ $("fase3Login")?.addEventListener("click",e=>{if(e.target.id==="fase3Login")clos
 $("fase3Password")?.addEventListener("keydown",e=>{if(e.key==="Enter")signIn()});
 (async()=>{try{const c=await getClient();const s=await c.auth.getSession();if(s.data.session){
   currentUser=s.data.session.user;
+  await loadContent();
   const role=currentUser.app_metadata?.role||"parent";
   showParentSession();
   document.querySelectorAll(".private-guard").forEach(x=>x.classList.add("hidden"));
