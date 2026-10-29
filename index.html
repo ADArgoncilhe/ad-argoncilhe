@@ -1012,7 +1012,7 @@ if ('serviceWorker' in navigator) {
   // A new service worker takes control without forcing a reload while forms are open.
   window.addEventListener('load', async()=>{
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=20261025-v28-convocation-expiry',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=20261029-v28-whatsapp',{updateViaCache:'none'});
       await reg.update();
     }catch(e){console.warn('Service Worker:',e)}
   });
@@ -1038,7 +1038,7 @@ let editingNotice=-1;
 const copy=v=>JSON.parse(JSON.stringify(v));
 function pendingForms(){return ['adminGameDate','adminGameTime','adminGamePlace','adminGameOpponent','adminGameDescription','adminGameConcentration','adminTrainingDate','adminTrainingTime','adminTrainingPlace','adminTrainingDescription','adminNoticeTitle','adminNoticeText','adaNoticeExpiry'].some(id=>document.getElementById(id)?.value.trim())||!!document.getElementById('adaNoticePinned')?.checked}
 function hasDraft(){return formDirty||currentUser?.app_metadata?.role==='coach'&&pendingForms()||!!lastPublishedContent&&JSON.stringify(content)!==JSON.stringify(lastPublishedContent)}
-function draftStatus(){setStatus('adaSaveState',saving?'A guardar…':hasDraft()?'Alterações por guardar':'Sem alterações pendentes')}
+function draftStatus(){setStatus('adaSaveState',saving?'A guardar…':hasDraft()?'Alterações por guardar':'Sem alterações pendentes');renderWhatsAppSharing()}
 window.addEventListener('beforeunload',e=>{if(hasDraft()){e.preventDefault();e.returnValue=''}});
 document.addEventListener('input',e=>{if(e.target.closest('#gestao-equipa')){formDirty=true;draftStatus()}});
 document.addEventListener('change',e=>{if(e.target.closest('#gestao-equipa')){formDirty=true;draftStatus()}});
@@ -1100,6 +1100,29 @@ function convocationExpiry(c){
  return gameExpiry({date:year+'-'+d[2].padStart(2,'0')+'-'+d[1].padStart(2,'0'),time});
 }
 function convocationExpired(c,now=Date.now()){const end=convocationExpiry(c);return !!end&&lisbonMinute(now)>=end}
+function whatsappShareState(){
+ const published=lastPublishedContent;
+ if(currentUser?.app_metadata?.role!=='coach'||saving)return 'unavailable';
+ if(!published||!String(published.convocation||'').trim()||convocationExpired(published))return 'unpublished';
+ const fields=['convocation','convocationAthletes','convocationMatchKey','convocationEndsAt'];
+ return fields.some(k=>JSON.stringify(content[k]??null)!==JSON.stringify(published[k]??null))?'draft':'ready';
+}
+function renderWhatsAppSharing(){
+ const box=$('adaWhatsAppSharing');if(!box)return;
+ const state=whatsappShareState();
+ box.querySelectorAll('button').forEach(b=>b.disabled=state!=='ready');
+ setStatus('adaWhatsAppHint',state==='ready'?'Mensagem com o link da convocatória publicada. Escolha o grupo dos pais e confirme o envio no WhatsApp.':state==='draft'?'Guarde as alterações à convocatória antes de partilhar.':'Publique uma convocatória ativa para partilhar no WhatsApp.');
+}
+function convocationWhatsAppMessage(reminder){
+ const link='https://adargoncilhe.github.io/ad-argoncilhe/#jogos';
+ return (reminder?'📋 ADA · Lembrete da convocatória\n\nQuem ainda não confirmou a leitura, por favor entre na Área dos Pais e carregue em «Tomei conhecimento» junto ao nome do atleta. Se já confirmou, não precisa de repetir.':'📋 ADA · Convocatória disponível\n\nA convocatória foi publicada/atualizada. Por favor, consulte a Área dos Pais e confirme a leitura em «Tomei conhecimento» junto ao nome do atleta.')+'\n\n'+link+'\n\nSe necessário, inicie sessão para consultar a convocatória.';
+}
+document.addEventListener('click',e=>{
+ const button=e.target.closest('#adaShareWhatsApp,#adaRemindWhatsApp');if(!button)return;
+ if(whatsappShareState()!=='ready'){renderWhatsAppSharing();return}
+ const url='https://wa.me/?text='+encodeURIComponent(convocationWhatsAppMessage(button.id==='adaRemindWhatsApp'));
+ window.open(url,'_blank','noopener,noreferrer');
+});
 function renderConvocationText(){const d=$('convocationText');if(d)d.textContent=!currentUser?'Entre na Área dos Pais para consultar a convocatória.':convocationExpired(content)?'O jogo anterior terminou. Aguarda a convocatória para o próximo jogo.':content.convocation||'Ainda não foi publicada uma convocatória.'}
 function resetExpiredConvocation(){
  if(!convocationExpired(content))return false;
@@ -1107,6 +1130,7 @@ function resetExpiredConvocation(){
  setStatus('coachStatus','A convocatória anterior terminou. Pode preparar a do próximo jogo.');return true;
 }
 setInterval(()=>{
+ renderWhatsAppSharing();
  renderConvocationText();renderAdaNoticeCenter();
  if(convocationExpired(content)){
   renderConvocationAthletes();
@@ -1333,7 +1357,7 @@ async function save(){
   }
   return true;
  }catch(err){setStatus("adminSaveStatus","Erro ao guardar: "+(err?.message||"verifica a ligação ao Supabase."));return false}
- finally{saving=false;controls.forEach((x,i)=>x.disabled=disabled[i]);if($('adaRestorePrevious'))$('adaRestorePrevious').disabled=!previousVersion;if(hasDraft())draftStatus()}
+ finally{saving=false;controls.forEach((x,i)=>x.disabled=disabled[i]);if($('adaRestorePrevious'))$('adaRestorePrevious').disabled=!previousVersion;if(hasDraft())draftStatus();renderWhatsAppSharing()}
 }
 
 function hasNotifiableChanges(oldC,newC){
@@ -1439,6 +1463,12 @@ function ensureEditorTools(){
  }
 }
 function renderConvocationEditor(){
+ if(!$('adaWhatsAppSharing')){
+  const box=document.createElement('div');box.id='adaWhatsAppSharing';box.className='ada-roster-actions';
+  box.innerHTML='<button type="button" id="adaShareWhatsApp" disabled>Partilhar no WhatsApp</button><button type="button" id="adaRemindWhatsApp" disabled>Lembrar confirmação</button><p id="adaWhatsAppHint" class="muted" aria-live="polite"></p>';
+  $('adminSaveConvocation').after(box);
+ }
+ renderWhatsAppSharing();
  if(!$('adaConvocationTools')){
   const tools=document.createElement('div');tools.id='adaConvocationTools';
   tools.innerHTML='<label for="adaConvocationGame">Jogo da convocatória</label><select id="adaConvocationGame"><option value="">Escolher jogo</option></select><button type="button" id="adaFillConvocation">Preencher dados do jogo</button><p class="muted">Preenche adversário, data, hora, campo e concentração. Pode depois ajustar o texto.</p><label for="adaConvocationEnd">Fim previsto do jogo (hora de Portugal)</label><input type="datetime-local" id="adaConvocationEnd"><p class="muted">A convocatória deixa de aparecer automaticamente nesta hora. Por defeito: início + 2 horas; ajuste se necessário. Sem hora de início, usa o fim do dia.</p><fieldset><legend>Selecionar atletas convocados</legend><div id="adaRosterChoices" class="ada-roster-choices"></div></fieldset><p id="adaRosterCount" role="status"></p>';
@@ -1808,6 +1838,7 @@ if((currentUser?.app_metadata?.role||"parent")==="coach") {
 </style>
 <style>.ada-roster-row{display:flex;align-items:center;gap:6px;min-width:0}.ada-roster-row label{flex:1;min-width:0}.ada-roster-row button{font-size:12px;padding:8px;min-height:40px}.ada-roster-actions{display:flex;flex-wrap:wrap;gap:8px}.ada-roster-actions p{flex-basis:100%}#adaClearConvocation{border:1px solid #e88888;color:#ffbaba}</style>
 </body></html>
+
 
 
 
