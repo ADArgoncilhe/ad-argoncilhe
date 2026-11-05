@@ -273,7 +273,7 @@ document.addEventListener('click',async function(e){
 <section id="gestao-equipa" class="fase3-panel">
 <div class="wrap">
 <div class="section-head"><div><h2>⚙️ Gestão da equipa</h2><span class="muted">Painel do treinador</span></div><button class="btn" id="coachLogout" type="button">Sair</button></div>
-<div class="admin-card"><strong>Estado</strong><div class="fase3-status" id="coachStatus">Ligado à base de dados.</div></div>
+<div class="admin-card"><strong>Estado</strong><div class="fase3-status" id="coachConnectionStatus">Sessão de treinador iniciada.</div></div>
 <div class="admin-grid">
 <div class="admin-card"><h3>📢 Novo aviso</h3><input id="adminNoticeTitle" placeholder="Título"><select id="adminNoticeType"><option>Informação</option><option>Importante</option><option>Urgente</option></select><textarea id="adminNoticeText" placeholder="Texto do aviso"></textarea><button class="btn" id="adminAddNotice" type="button">Publicar aviso</button><div class="admin-list" id="adminNoticeList"></div></div>
 <div class="admin-card">
@@ -1018,7 +1018,7 @@ if ('serviceWorker' in navigator) {
   // A new service worker takes control without forcing a reload while forms are open.
   window.addEventListener('load', async()=>{
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=20261029-v28-controls-fix',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=20261105-v28-status-fix',{updateViaCache:'none'});
       await reg.update();
     }catch(e){console.warn('Service Worker:',e)}
   });
@@ -1052,6 +1052,7 @@ let currentUser=null;
 const $=id=>document.getElementById(id);
 function setStatus(id,msg){const e=$(id);if(e)e.textContent=msg||""}
 async function runConvocationAction(action){
+ setStatus('coachStatus','A verificar os dados da convocatória…');
  try{await action()}catch(e){console.error('Convocatória:',e);setStatus('coachStatus','Erro na convocatória: '+(e.message||e)+'. O texto foi mantido.')}
  $('coachStatus')?.scrollIntoView({block:'nearest',behavior:'smooth'});
 }
@@ -1887,6 +1888,7 @@ if((currentUser?.app_metadata?.role||"parent")==="coach") {
 </style>
 <style>.ada-roster-row{display:flex;align-items:center;gap:6px;min-width:0}.ada-roster-row label{flex:1;min-width:0}.ada-roster-row button{font-size:12px;padding:8px;min-height:40px}.ada-roster-actions{display:flex;flex-wrap:wrap;gap:8px}.ada-roster-actions p{flex-basis:100%}#adaClearConvocation{border:1px solid #e88888;color:#ffbaba}</style>
 </body></html>
+
 
 
 
