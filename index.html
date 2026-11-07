@@ -1018,7 +1018,7 @@ if ('serviceWorker' in navigator) {
   // A new service worker takes control without forcing a reload while forms are open.
   window.addEventListener('load', async()=>{
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=20261105-v28-status-fix',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=20261107-v28-whatsapp-match',{updateViaCache:'none'});
       await reg.update();
     }catch(e){console.warn('Service Worker:',e)}
   });
@@ -1126,7 +1126,15 @@ function renderWhatsAppSharing(){
 }
 function convocationWhatsAppMessage(reminder){
  const link='https://adargoncilhe.github.io/ad-argoncilhe/#jogos';
- return (reminder?'📋 ADA · Lembrete da convocatória\n\nQuem ainda não confirmou a leitura, por favor entre na Área dos Pais e carregue em «Tomei conhecimento» junto ao nome do atleta. Se já confirmou, não precisa de repetir.':'📋 ADA · Convocatória disponível\n\nA convocatória foi publicada/atualizada. Por favor, consulte a Área dos Pais e confirme a leitura em «Tomei conhecimento» junto ao nome do atleta.')+'\n\n'+link+'\n\nSe necessário, inicie sessão para consultar a convocatória.';
+ const published=lastPublishedContent||{},lines=String(published.convocation||'').split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+ const game=(published.games||[]).find(g=>g.adaMatchKey&&g.adaMatchKey===published.convocationMatchKey);
+ const fixtureLine=lines.find(s=>/^(?:⚽\s*)?jogo\s*:/i.test(s))||lines.find(s=>/\s(?:vs\.?|versus|x|—|–)\s/i.test(s)&&!/^(?:data|hora|campo|concentra)/i.test(s));
+ const away=game&&['F','FORA'].includes(String(game.casaFora||'').toUpperCase());
+ const fixture=fixtureLine?.replace(/^(?:⚽\s*)?jogo\s*:\s*/i,'')||(game?.adversario?(away?game.adversario+' — AD Argoncilhe':'AD Argoncilhe — '+game.adversario):'Consultar convocatória no link');
+ const concentrationLine=lines.find(s=>/concentra[çc][ãa]o/i.test(s));
+ const concentration=concentrationLine?.replace(/^.*?concentra[çc][ãa]o\s*[:\-–]?\s*/i,'').replace(/^[#*\s]+|[#*\s]+$/g,'')||game?.concentracao||game?.concentration||'A confirmar';
+ const details='⚽ Jogo: '+fixture+'\n🕒 Concentração: '+concentration;
+ return (reminder?'📋 ADA · Lembrete da convocatória':'📋 ADA · Convocatória disponível')+'\n\n'+details+'\n\n'+(reminder?'Quem ainda não confirmou a leitura, por favor entre na Área dos Pais e carregue em «Tomei conhecimento» junto ao nome do atleta. Se já confirmou, não precisa de repetir.':'Por favor, consulte a convocatória e confirme a leitura em «Tomei conhecimento» junto ao nome do atleta.')+'\n\n'+link+'\n\nSe necessário, inicie sessão para consultar a convocatória.';
 }
 document.addEventListener('click',e=>{
  const button=e.target.closest('#adaShareWhatsApp,#adaRemindWhatsApp');if(!button)return;
@@ -1888,6 +1896,7 @@ if((currentUser?.app_metadata?.role||"parent")==="coach") {
 </style>
 <style>.ada-roster-row{display:flex;align-items:center;gap:6px;min-width:0}.ada-roster-row label{flex:1;min-width:0}.ada-roster-row button{font-size:12px;padding:8px;min-height:40px}.ada-roster-actions{display:flex;flex-wrap:wrap;gap:8px}.ada-roster-actions p{flex-basis:100%}#adaClearConvocation{border:1px solid #e88888;color:#ffbaba}</style>
 </body></html>
+
 
 
 
