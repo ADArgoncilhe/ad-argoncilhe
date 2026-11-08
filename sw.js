@@ -1,5 +1,5 @@
 /* V28: fresh navigation, no caching of API responses, retain push support. */
-const BUILD_ID = "20261108-v28-game-change-alerts";
+const BUILD_ID = "20261108-v28-parent-notices-home";
 const CACHE_NAME = `ad-argoncilhe-sub10-${BUILD_ID}`;
 const APP_SHELL = ["./index.html", "./manifest.json"];
 const SCOPE = new URL(self.registration.scope);
