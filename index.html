@@ -461,7 +461,7 @@ document.addEventListener('click',async function(e){
       data: "21/11/2026",
       adversario: "CJ Salesiano Arouca",
       casaFora: "F",
-      hora: "11:30",
+      hora: "10:30",
       local: "Complexo Desportivo de Arouca",
       tipo: "Campeonato",
       descricao: "8ª Jornada do Campeonato."
@@ -924,7 +924,12 @@ const players = [
   });
 
   window.__adaSetGames=next=>{games=next};
-  window.__adaRefresh=()=>{renderGamesArea();renderNextGame();renderNextTraining();renderCalendar();window.__adaParentFeatures?.()};
+  window.__adaRefresh=()=>{
+     // O cartão do próximo jogo deve atualizar mesmo que outro quadro falhe.
+     for(const render of [renderNextGame,renderNextTraining,renderCalendar,renderGamesArea,()=>window.__adaParentFeatures?.()]){
+       try{render()}catch(error){console.error('Falha numa secção ao atualizar a agenda:',error)}
+     }
+   };
   window.__adaTrainingDefaults=()=>{const out=[];for(let d=new Date(seasonStart);d<=seasonEnd;d.setDate(d.getDate()+1))if(isTrainingDay(d))out.push({data:localDateKey(d),hora:'18:00–19:30',local:'Campo CS Argoncilhe',descricao:'Trabalho Técnico-tático'});return out};
   const todayButton=document.createElement('button');todayButton.type='button';todayButton.className='btn';todayButton.textContent='Hoje';todayButton.style.cssText='margin:0;padding:9px 12px';document.getElementById('prevMonth').after(todayButton);todayButton.onclick=()=>{view=new Date();renderCalendar()};
   renderCalendar();
@@ -1880,6 +1885,19 @@ $("fase3Password")?.addEventListener("keydown",e=>{if(e.key==="Enter"){e.prevent
  }catch(e){console.warn("Sessão:",e);if(!currentUser)hideParentSession()}
  await loadContent();
  setupLiveUpdates();
+ // No iPhone, os temporizadores em segundo plano podem parar.
+ // Ao regressar à aplicação, voltar a consultar a agenda publicada.
+ let lastForegroundCheck=0;
+ function revalidateOnForeground(){
+   if(document.visibilityState==='hidden'||saving||hasDraft())return;
+   const now=Date.now();
+   if(now-lastForegroundCheck<10000)return;
+   lastForegroundCheck=now;
+   void loadContent();
+ }
+ document.addEventListener('visibilitychange',revalidateOnForeground);
+ window.addEventListener('focus',revalidateOnForeground);
+ window.addEventListener('pageshow',event=>{if(event.persisted)revalidateOnForeground()});
  if(currentUser){
   const role=currentUser.app_metadata?.role||"parent";
   if(role==="coach")showCoach();
